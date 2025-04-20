@@ -1,0 +1,103 @@
+#+STARTUP: inlineimages
+
+* AwsSsoConfigGenerator
+
+Tool to generate an AWS config file (~​~/.aws/config~) (our file is saved to ~​~/.aws/config.generated~) after authenticating and authorizing AWS SSO IAM Identity Center.
+
+** Downloads
+
+Available downloads for macOS (x86 and m series), linux (x86 and arm64) and windows.
+
+*** macOS
+
+On macOS you will get a popup if you run without doing the below.
+
+~Apple could not verify “aws-sso-config-generator” is free of malware that may harm your Mac or compromise your privacy.~
+
+#+caption: macOS Apple popup could not verify
+[[file:./images/macos-popup.png]]
+
+**** Allow executable to not be quarantined
+
+Make sure to only do this for verified executable downloaded from https://github.com/djgoku/aws-sso-config-generator or built locally.
+
+#+begin_example
+xattr -dr com.apple.quarantine ~/aws-sso-config-generator
+chmod +x ~/aws-sso-config-generator
+#+end_example
+
+** Usage
+*Note: if no parameters are passed user will be prompted for ~region~ and ~start_url~.*
+
+Example call of ~aws-sso-config-generator~ where AWS access portal is in ~us-west-2~ with a url of ~https://​<example>.awsapps.com/start/#/~.
+
+#+begin_example
+aws-sso-config-generator --region us-west-2 --start-url https://<example>.awsapps.com/start/#/
+#+end_example
+
+#+begin_example
+aws-sso-config-generator -r us-west-2 -u https://<example>.awsapps.com/start/#/
+#+end_example
+
+** Parameters
+
+| Option              | Type   | Example                                   | Description                               |
+|---------------------+--------+-------------------------------------------+-------------------------------------------|
+| --region or -r    | string | -r us-west-2                              | Region where AWS access portal is hosted. |
+| --start-url or -u | string | -u https://<example>.awsapps.com/start/#/ | The URL for the AWS access portal         |
+| --help or -h      | N/A    | -h                                        | Help menu                                 |
+
+** Example Config (~/.aws/sso.generated)
+
+#+begin_example
+# config generated via https://github.com/djgoku/aws-sso-config-generator
+#
+# This requires AWS CLI v2
+#
+# 1. log into aws sso via `aws sso login --profile use-any-profile-name`
+# 2. validate `AWS_PROFILE=use-any-profile-name aws sts get-caller-identity`
+
+# AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=1111111-RoleName aws sts get-caller-identity
+[profile 1111111-RoleName]
+sso_start_url = https://<example>.awsapps.com/start/#/
+sso_region = us-east-2
+sso_account_id = 1111111
+sso_role_name = RoleName
+region = us-west-2
+output = json
+#+end_example
+
+** Development
+
+1. Clone repository
+2. ~devbox run do-all~
+
+** FAQ
+
+*** Why am I seeing an old version of an aws-sso-config-generator?
+
+You might need to clean-up old resources from a previous version and re-run the application.
+
+#+begin_example
+./burrito_out/aws_sso_config_generator maintenance uninstall
+[w] This will uninstall the application runtime for this Burrito binary!
+[?] Please confirm this action [y/n]: y
+y
+[i] Deleting directory: /home/devbox/.local/share/.burrito/aws_sso_config_generator_erts-15.2.2_0.1.0
+[i] Uninstall complete!
+[i] Quitting.
+#+end_example
+
+*** How do these binaries work?
+
+We are using [[https://github.com/burrito-elixir/burrito][burrito]] which packages everything required to run the application into a self-extracting executable. Once ran the application is extracted and then ran.
+
+** References
+*** Elixir
+- https://github.com/burrito-elixir/burrito
+- https://github.com/aws-beam/aws-elixir
+
+*** Other
+- https://github.com/jetify-com/devbox
+- https://stackoverflow.com/a/71850591
+- https://docs.aws.amazon.com/singlesignon/latest/OIDCAPIReference/Welcome.html

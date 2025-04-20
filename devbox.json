@@ -1,0 +1,52 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.14.0/.schema/devbox.schema.json",
+  "packages": {
+    "beam.packages.erlang_27.elixir_1_18": "",
+    "erlang":                              "latest",
+    "beam27Packages.elixir-ls":            "latest",
+    "git":                                 "latest",
+    "zig":                                 "latest",
+    "xz":                                  "latest",
+    "_7zz":                                "latest",
+    "github-cli":                          "latest",
+    "curl":                                "latest",
+    "darwin.apple_sdk.frameworks.CoreServices": {
+      "platforms": [
+        "aarch64-darwin",
+        "x86_64-darwin",
+      ],
+    },
+    "act": "latest",
+  },
+  "env": {
+    "ELIXIR_ERL_OPTIONS": "+fnu",
+  },
+  "shell": {
+    "init_hook": [
+      "mkdir -p .nix-mix",
+      "mkdir -p .nix-hex",
+      "export MIX_HOME=$PWD/.nix-mix",
+      "export HEX_HOME=$PWD/.nix-hex",
+      "export ERL_AFLAGS='-kernel shell_history enabled'",
+      "mix local.hex --force",
+      "mix local.rebar --force",
+    ],
+    "scripts": {
+      "do-all": [
+        "mix deps.get --only prod",
+        "mix format --check-formatted",
+        "MIX_ENV=prod mix release --overwrite"
+      ],
+      "version-info": [
+        "MIX_APPLICATION_VERSION=$(elixir -e 'Regex.run(~r/version: \"(\\d+.\\d+.\\d+)\"/, File.read!(\"mix.exs\"), capture: :all_but_first) |> List.first() |> IO.puts()')",
+        "echo \"version $MIX_APPLICATION_VERSION\"",
+        "cd burrito_out",
+        "bash -c 'for file in *_*; do mv \"$file\" \"${file//_/-}\"; done'",
+        "shasum -a 256 ./* > aws-sso-config-generator-checksums.txt",
+        "cd -",
+        "gh release create ${MIX_APPLICATION_VERSION} --generate-notes",
+        "gh release upload ${MIX_APPLICATION_VERSION} ./burrito_out/* -R djgoku/aws-sso-config-generator"
+      ]
+    }
+  }
+}
