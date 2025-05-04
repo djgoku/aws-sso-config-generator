@@ -39,6 +39,7 @@ defmodule AwsSsoConfigGenerator.Util do
       OptionParser.parse(args,
         strict: [
           region: :string,
+          sso_region: :string,
           start_url: :string,
           help: :boolean,
           template: :string,
@@ -81,12 +82,13 @@ defmodule AwsSsoConfigGenerator.Util do
 
     Examples:
 
-        aws-sso-config-generator -r us-west-2 -u https://<example>.awsapps.com/start/#/
+        aws-sso-config-generator -r us-west-2 --sso-region us-east-1 -u https://<example>.awsapps.com/start/#/
         aws-sso-config-generator (Prompts for region and start url)
 
     Options:
 
-    --region|-r      - Region where AWS access portal is hosted.
+    --sso-region     - Region where AWS access portal is hosted.
+    --region|-r      - Region where AWS resources are hosted.
     --start-url|-u   - The URL for the AWS access portal
     --help|-h        - Help menu
     --template|-t    - JSON template file to re-map accounts and roles defaults to ~/.aws/config.template.json
@@ -107,11 +109,17 @@ defmodule AwsSsoConfigGenerator.Util do
 
   def get_region(config) do
     region =
-      Keyword.get(config.args, :region) || Prompt.text("Enter aws region (e.g.: us-west-2)")
+      Keyword.get(config.args, :region) ||
+        Prompt.text("Enter aws region where AWS resources are hosted (e.g.: us-west-2)")
+
+    sso_region =
+      Keyword.get(config.args, :sso_region) ||
+        Prompt.text("Enter aws region where AWS access portal is hosted (e.g.: us-west-2)")
 
     config
     |> Map.put(:region, region)
-    |> Map.put(:client, %AWS.Client{region: region})
+    |> Map.put(:client, %AWS.Client{region: sso_region})
+    |> Map.put(:sso_region, sso_region)
   end
 
   def request_until(config, expires_in) do
@@ -349,13 +357,13 @@ defmodule AwsSsoConfigGenerator.Util do
       end
 
     """
-    # AWS_PROFILE=#{profile} aws sts get-caller-identity
+    # AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=#{profile} aws sts get-caller-identity
     [profile #{profile}]
     sso_start_url = #{config.start_url}
-    sso_region = #{config.region}
+    sso_region = #{config.sso_region}
     sso_account_id = #{account_id}
     sso_role_name = #{role_name}
-    region = us-west-2
+    region = #{config.region}
     output = json
     """
   end

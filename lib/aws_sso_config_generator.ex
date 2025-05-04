@@ -16,6 +16,7 @@ defmodule AwsSsoConfigGenerator do
             output_file: nil,
             register_client: nil,
             region: nil,
+            sso_region: nil,
             start_url: nil,
             template: %{},
             template_file: nil,
