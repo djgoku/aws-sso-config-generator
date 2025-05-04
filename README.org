@@ -65,12 +65,21 @@ aws-sso-config-generator -r us-west-2 --sso-region us-east-1 -u https://<example
 # 1. log into aws sso via `aws sso login --profile use-any-profile-name`
 # 2. validate `AWS_PROFILE=use-any-profile-name aws sts get-caller-identity`
 
-# AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=1111111-RoleName aws sts get-caller-identity
-[profile 1111111-RoleName]
+# AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=1111111-ReadOnly aws sts get-caller-identity
+[profile 1111111-ReadOnly]
 sso_start_url = https://<example>.awsapps.com/start/#/
 sso_region = us-east-2
 sso_account_id = 1111111
-sso_role_name = RoleName
+sso_role_name = ReadOnly
+region = us-west-2
+output = json
+
+# AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=1111111-ReadOnly aws sts get-caller-identity
+[profile 1111111-ReadOnly]
+sso_start_url = https://<example>.awsapps.com/start/#/
+sso_region = us-east-2
+sso_account_id = 1111111
+sso_role_name = ReadOnly
 region = us-west-2
 output = json
 #+end_example
