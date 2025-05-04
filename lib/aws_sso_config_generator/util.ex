@@ -237,9 +237,17 @@ defmodule AwsSsoConfigGenerator.Util do
   end
 
   def config_sort_account_roles(config) do
+  def duplicate_keys_with_new_keys(config) do
     account_roles =
       config.account_roles
-      |> Enum.sort_by(&Map.get(&1, "accountId"))
+      |> Enum.map(fn map ->
+        account_id = Map.get(map, "accountId")
+        role_name = Map.get(map, "roleName")
+
+        map
+        |> Map.put("accountIdNew", account_id)
+        |> Map.put("roleNameNew", role_name)
+      end)
 
     %{config | account_roles: account_roles}
   end

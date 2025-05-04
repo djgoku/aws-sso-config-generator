@@ -54,6 +54,7 @@ defmodule AwsSsoConfigGenerator do
       %{config | access_token: maybe_access_token}
       |> Util.sso_list_accounts(nil)
       |> Util.sso_list_account_roles()
+      |> Util.duplicate_keys_with_new_keys()
       |> Util.generate_config()
       |> Enum.join("\n")
 
