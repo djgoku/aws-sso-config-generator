@@ -236,7 +236,28 @@ defmodule AwsSsoConfigGenerator.Util do
     role_list
   end
 
-  def config_sort_account_roles(config) do
+  def maybe_save_debug_data(config) do
+    if Keyword.get(config.args, :debug) do
+      debug_file = Path.expand(Path.join(System.user_home!(), ".aws/config.debug.exs"))
+      Logger.debug("Debug mode enabled saving config to #{debug_file}")
+
+      config =
+        Map.take(config, [
+          :account_list,
+          :account_roles,
+          :region,
+          :start_url,
+          :output_file,
+          :template,
+          :template_file
+        ])
+
+      File.write!(debug_file, inspect(config), limit: :infinity, printable_limit: :infinity)
+    end
+
+    config
+  end
+
   def maybe_load_template(config) do
     if File.exists?(config.template_file) do
       Logger.info("Loaded template #{config.template_file}")

@@ -56,6 +56,7 @@ defmodule AwsSsoConfigGenerator do
       |> Util.sso_list_account_roles()
       |> Util.duplicate_keys_with_new_keys()
       |> Util.maybe_load_template()
+      |> Util.maybe_save_debug_data()
       |> Util.generate_config()
       |> Enum.join("\n")
 
