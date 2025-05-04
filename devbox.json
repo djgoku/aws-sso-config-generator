@@ -41,9 +41,13 @@
         "mix format --check-formatted",
         "MIX_ENV=prod mix release --overwrite"
       ],
+      "version-info-only": [
+        "MIX_APPLICATION_VERSION=$(elixir -e 'Regex.run(~r/version: \"(.*)\"/, File.read!(\"mix.exs\"), capture: :all_but_first) |> List.first() |> IO.puts()')",
+        "echo \"version '$MIX_APPLICATION_VERSION'\""
+      ],
       "version-info": [
-        "MIX_APPLICATION_VERSION=$(elixir -e 'Regex.run(~r/version: \"(\\d+.\\d+.\\d+)\"/, File.read!(\"mix.exs\"), capture: :all_but_first) |> List.first() |> IO.puts()')",
-        "echo \"version $MIX_APPLICATION_VERSION\"",
+        "MIX_APPLICATION_VERSION=$(elixir -e 'Regex.run(~r/version: \"(.*)\"/, File.read!(\"mix.exs\"), capture: :all_but_first) |> List.first() |> IO.puts()')",
+        "echo \"version '$MIX_APPLICATION_VERSION'\"",
         "cd burrito_out",
         "bash -c 'for file in *_*; do mv \"$file\" \"${file//_/-}\"; done'",
         "shasum -a 256 ./* > aws-sso-config-generator-checksums.txt",
