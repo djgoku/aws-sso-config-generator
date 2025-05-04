@@ -12,9 +12,12 @@ defmodule AwsSsoConfigGenerator do
             device_code: nil,
             expires_in: nil,
             interval: nil,
+            output_file: nil,
             register_client: nil,
             region: nil,
             start_url: nil,
+            template: %{},
+            template_file: nil,
             verification_uri_complete: nil
 
   def start(_, _) do

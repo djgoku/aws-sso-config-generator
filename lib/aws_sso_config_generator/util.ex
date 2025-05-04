@@ -37,11 +37,36 @@ defmodule AwsSsoConfigGenerator.Util do
   def parse_args(args) do
     {parsed, _, _} =
       OptionParser.parse(args,
-        strict: [region: :string, start_url: :string, help: :boolean],
-        aliases: [r: :region, u: :start_url, h: :help]
+        strict: [
+          region: :string,
+          start_url: :string,
+          help: :boolean,
+          template: :string,
+          out: :string,
+          debug: :boolean
+        ],
+        aliases: [r: :region, u: :start_url, h: :help, t: :template, o: :out]
       )
 
     parsed
+  end
+
+  def map_args(config) do
+    template_file =
+      Path.expand(
+        Keyword.get(
+          config.args,
+          :template,
+          Path.join(System.user_home!(), ".aws/config.template.json")
+        )
+      )
+
+    output_file =
+      Path.expand(
+        Keyword.get(config.args, :out, Path.join(System.user_home!(), ".aws/config.generated"))
+      )
+
+    %{config | template_file: template_file, output_file: output_file}
   end
 
   def get_help() do
@@ -64,6 +89,8 @@ defmodule AwsSsoConfigGenerator.Util do
     --region|-r      - Region where AWS access portal is hosted.
     --start-url|-u   - The URL for the AWS access portal
     --help|-h        - Help menu
+    --template|-t    - JSON template file to re-map accounts and roles defaults to ~/.aws/config.template.json
+    --out|-o         - Output file which defaults to ~/.aws/config.generated
     """
   end
 
