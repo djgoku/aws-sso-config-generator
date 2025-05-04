@@ -8,16 +8,22 @@ defmodule AwsSsoConfigGenerator.MixProject do
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      releases: releases()
+      releases: releases(),
+      escript: [main_module: AwsSsoConfigGenerator]
     ]
   end
 
   # Run "mix help compile.app" to learn about applications.
   def application do
-    [
-      extra_applications: [:logger],
-      mod: {AwsSsoConfigGenerator, []}
+    applications = [
+      extra_applications: [:logger]
     ]
+
+    if Mix.env() == :test or Mix.env() == :escript do
+      applications
+    else
+      applications ++ [mod: {AwsSsoConfigGenerator, []}]
+    end
   end
 
   # Run "mix help deps" to learn about dependencies.

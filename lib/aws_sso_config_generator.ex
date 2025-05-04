@@ -21,6 +21,11 @@ defmodule AwsSsoConfigGenerator do
             template_file: nil,
             verification_uri_complete: nil
 
+  def main(_) do
+    # for escript use
+    start("not", "used")
+  end
+
   def start(_, _) do
     args = Util.parse_args(Burrito.Util.Args.argv())
 
