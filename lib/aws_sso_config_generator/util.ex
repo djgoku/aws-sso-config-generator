@@ -94,16 +94,24 @@ defmodule AwsSsoConfigGenerator.Util do
     """
   end
 
-  def get_start_url(args) do
-    Keyword.get(
-      args,
-      :start_url
-    ) ||
-      Prompt.text("Enter sso start url (e.g.: https://<an-example.com>.awsapps.com/start/#/)")
+  def get_start_url(config) do
+    start_url =
+      Keyword.get(
+        config.args,
+        :start_url
+      ) ||
+        Prompt.text("Enter sso start url (e.g.: https://<an-example.com>.awsapps.com/start/#/)")
+
+    Map.put(config, :start_url, start_url)
   end
 
-  def get_region(args) do
-    Keyword.get(args, :region) || Prompt.text("Enter aws region (e.g.: us-west-2)")
+  def get_region(config) do
+    region =
+      Keyword.get(config.args, :region) || Prompt.text("Enter aws region (e.g.: us-west-2)")
+
+    config
+    |> Map.put(:region, region)
+    |> Map.put(:client, %AWS.Client{region: region})
   end
 
   def request_until(config, expires_in) do

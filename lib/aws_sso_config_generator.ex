@@ -5,6 +5,7 @@ defmodule AwsSsoConfigGenerator do
   defstruct access_token: nil,
             account_list: [],
             account_roles: [],
+            args: [],
             client: nil,
             client_id: nil,
             client_secret: nil,
@@ -28,15 +29,11 @@ defmodule AwsSsoConfigGenerator do
       System.halt(0)
     end
 
-    aws_region = Util.get_region(args)
-    start_url = Util.get_start_url(args)
-
     config =
-      %AwsSsoConfigGenerator{
-        region: aws_region,
-        start_url: start_url,
-        client: %AWS.Client{region: aws_region}
-      }
+      %AwsSsoConfigGenerator{args: args}
+      |> Util.map_args()
+      |> Util.get_region()
+      |> Util.get_start_url()
       |> Util.sso_oidc_register_client()
       |> Util.sso_oidc_start_device_authorization()
 
