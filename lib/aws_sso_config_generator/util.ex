@@ -269,10 +269,16 @@ defmodule AwsSsoConfigGenerator.Util do
   end
 
   def generate_config(config) do
-    [config_template_header()] ++
-      Enum.map(config.account_roles, fn account_role ->
+    profiles =
+      config.account_roles
+      |> Enum.map(fn account_role ->
         config_template(config, account_role)
       end)
+      |> Enum.sort()
+
+    [config_template_header()] ++ profiles
+  end
+
   def aws_request_options() do
     [sign_request?: false, enable_retries?: true]
   end
