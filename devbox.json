@@ -3,7 +3,7 @@
   "packages": {
     "beam.packages.erlang_27.elixir_1_18": "",
     "erlang":                              "latest",
-    "beam27Packages.elixir-ls":            "latest",
+    "beam27Packages.elixir-ls":            "0.26.4",
     "git":                                 "latest",
     "zig":                                 "latest",
     "xz":                                  "latest",
@@ -32,8 +32,12 @@
       "mix local.rebar --force",
     ],
     "scripts": {
+      "escript": [
+        "MIX_ENV=escript mix escript.build"
+      ],
       "do-all": [
         "mix deps.get --only prod",
+        "mix test",
         "mix format --check-formatted",
         "MIX_ENV=prod mix release --overwrite"
       ],
