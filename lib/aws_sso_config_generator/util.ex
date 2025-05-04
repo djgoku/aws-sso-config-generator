@@ -237,6 +237,29 @@ defmodule AwsSsoConfigGenerator.Util do
   end
 
   def config_sort_account_roles(config) do
+  def maybe_load_template(config) do
+    if File.exists?(config.template_file) do
+      Logger.info("Loaded template #{config.template_file}")
+      json = File.read!(config.template_file) |> JSON.decode!()
+
+      json =
+        ["accounts", "roles"]
+        |> Enum.reduce(json, fn key, json -> add_missing_template_key(json, key) end)
+
+      Map.put(config, :template, json)
+    else
+      config
+    end
+  end
+
+  def add_missing_template_key(json, key) do
+    if is_map_key(json, key) do
+      json
+    else
+      Map.put(json, key, %{})
+    end
+  end
+
   def duplicate_keys_with_new_keys(config) do
     account_roles =
       config.account_roles
