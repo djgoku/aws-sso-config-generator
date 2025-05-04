@@ -142,7 +142,7 @@ defmodule AwsSsoConfigGenerator.Util do
       AWS.SSOOIDC.register_client(
         config.client,
         %{"clientName" => config.client_name, "clientType" => "public"},
-        sign_request?: false
+        aws_request_options()
       )
 
     %{
@@ -169,7 +169,7 @@ defmodule AwsSsoConfigGenerator.Util do
           "clientSecret" => config.client_secret,
           "startUrl" => config.start_url
         },
-        sign_request?: false
+        aws_request_options()
       )
 
     %{
@@ -192,13 +192,17 @@ defmodule AwsSsoConfigGenerator.Util do
     AWS.SSOOIDC.create_token(
       config.client,
       request,
-      sign_request?: false
+      aws_request_options()
     )
   end
 
   def sso_list_accounts(config, current_token) do
-    case AWS.SSO.list_accounts(config.client, nil, current_token, config.access_token,
-           sign_request?: false
+    case AWS.SSO.list_accounts(
+           config.client,
+           nil,
+           current_token,
+           config.access_token,
+           aws_request_options()
          ) do
       {:ok, %{"accountList" => account_list, "nextToken" => next_token}, _} ->
         if is_nil(next_token) do
@@ -220,8 +224,13 @@ defmodule AwsSsoConfigGenerator.Util do
 
   def sso_list_account_roles(config, account_id) do
     {:ok, %{"roleList" => role_list}, _} =
-      AWS.SSO.list_account_roles(config.client, account_id, nil, nil, config.access_token,
-        sign_request?: false
+      AWS.SSO.list_account_roles(
+        config.client,
+        account_id,
+        nil,
+        nil,
+        config.access_token,
+        aws_request_options()
       )
 
     role_list
@@ -264,5 +273,7 @@ defmodule AwsSsoConfigGenerator.Util do
       Enum.map(config.account_roles, fn account_role ->
         config_template(config, account_role)
       end)
+  def aws_request_options() do
+    [sign_request?: false, enable_retries?: true]
   end
 end
