@@ -57,12 +57,12 @@ defmodule AwsSsoConfigGenerator do
       |> Util.duplicate_keys_with_new_keys()
       |> Util.maybe_load_template()
       |> Util.maybe_save_debug_data()
+      |> Util.maybe_rename_accounts_and_roles()
       |> Util.generate_config()
       |> Enum.join("\n")
 
-    file_path = Path.join(System.user_home!(), ".aws/config.generated")
-    File.write(file_path, config_data)
-    IO.puts("wrote generated to #{file_path}")
+    File.write(config.output_file, config_data)
+    IO.puts("wrote generated to #{config.output_file}")
 
     System.halt(0)
   end

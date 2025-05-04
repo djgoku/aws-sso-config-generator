@@ -296,6 +296,34 @@ defmodule AwsSsoConfigGenerator.Util do
     %{config | account_roles: account_roles}
   end
 
+  def maybe_rename_accounts_and_roles(config) when map_size(config.template) == 0, do: config
+
+  def maybe_rename_accounts_and_roles(config) do
+    account_roles =
+      config.account_roles
+      |> Enum.map(fn account_role ->
+        account_role
+        |> maybe_update_account_or_role("accountId", config.template, "accounts")
+        |> maybe_update_account_or_role("roleName", config.template, "roles")
+      end)
+
+    %{config | account_roles: account_roles}
+  end
+
+  def maybe_update_account_or_role(account_role, account_role_key, template, template_key) do
+    account_role_key_value = Map.get(account_role, account_role_key)
+
+    template_map = Map.get(template, template_key)
+
+    case Map.get(template_map, account_role_key_value) do
+      nil ->
+        account_role
+
+      new_value ->
+        Map.put(account_role, "#{account_role_key}New", new_value)
+    end
+  end
+
   def config_template_header() do
     """
     # config generated via https://github.com/djgoku/aws-sso-config-generator
@@ -307,10 +335,22 @@ defmodule AwsSsoConfigGenerator.Util do
     """
   end
 
-  def config_template(config, %{"accountId" => account_id, "roleName" => role_name}) do
+  def config_template(config, %{
+        "accountId" => account_id,
+        "accountIdNew" => account_id_new,
+        "roleName" => role_name,
+        "roleNameNew" => role_name_new
+      }) do
+    profile =
+      if String.length(role_name_new) == 0 do
+        account_id_new
+      else
+        "#{account_id_new}-#{role_name_new}"
+      end
+
     """
-    # AWS_PROFILE=#{account_id}-#{role_name} aws sts get-caller-identity
-    [profile #{account_id}-#{role_name}]
+    # AWS_PROFILE=#{profile} aws sts get-caller-identity
+    [profile #{profile}]
     sso_start_url = #{config.start_url}
     sso_region = #{config.region}
     sso_account_id = #{account_id}
