@@ -45,9 +45,19 @@ defmodule AwsSsoConfigGenerator do
 
     Util.browser_open(config.verification_uri_complete)
 
-    IO.puts(
-      "\nVerification URI (copy and paste into browser if it doesn't open.)\n\n  #{config.verification_uri_complete}\n\n"
-    )
+    output = """
+    aws-sso-config-generator #{Application.spec(:aws_sso_config_generator, :vsn)}
+
+    Tool to generate an AWS config file (~/.aws/config) after authenticating and authorizing AWS SSO IAM Identity Center.
+
+    Source code: https://github.com/djgoku/aws-sso-config-generator
+
+    Verification URI (copy and paste into browser if it doesn't open.)
+
+      #{config.verification_uri_complete}
+    """
+
+    IO.puts(output)
 
     maybe_access_token = Util.request_until(config, config.expires_in)
 
