@@ -37,11 +37,37 @@ defmodule AwsSsoConfigGenerator.Util do
   def parse_args(args) do
     {parsed, _, _} =
       OptionParser.parse(args,
-        strict: [region: :string, start_url: :string, help: :boolean],
-        aliases: [r: :region, u: :start_url, h: :help]
+        strict: [
+          region: :string,
+          sso_region: :string,
+          start_url: :string,
+          help: :boolean,
+          template: :string,
+          out: :string,
+          debug: :boolean
+        ],
+        aliases: [r: :region, u: :start_url, h: :help, t: :template, o: :out]
       )
 
     parsed
+  end
+
+  def map_args(config) do
+    template_file =
+      Path.expand(
+        Keyword.get(
+          config.args,
+          :template,
+          Path.join(System.user_home!(), ".aws/config.template.json")
+        )
+      )
+
+    output_file =
+      Path.expand(
+        Keyword.get(config.args, :out, Path.join(System.user_home!(), ".aws/config.generated"))
+      )
+
+    %{config | template_file: template_file, output_file: output_file}
   end
 
   def get_help() do
@@ -56,27 +82,44 @@ defmodule AwsSsoConfigGenerator.Util do
 
     Examples:
 
-        aws-sso-config-generator -r us-west-2 -u https://<example>.awsapps.com/start/#/
+        aws-sso-config-generator -r us-west-2 --sso-region us-east-1 -u https://<example>.awsapps.com/start/#/
         aws-sso-config-generator (Prompts for region and start url)
 
     Options:
 
-    --region|-r      - Region where AWS access portal is hosted.
+    --sso-region     - Region where AWS access portal is hosted.
+    --region|-r      - Region where AWS resources are hosted.
     --start-url|-u   - The URL for the AWS access portal
     --help|-h        - Help menu
+    --template|-t    - JSON template file to re-map accounts and roles defaults to ~/.aws/config.template.json
+    --out|-o         - Output file which defaults to ~/.aws/config.generated
     """
   end
 
-  def get_start_url(args) do
-    Keyword.get(
-      args,
-      :start_url
-    ) ||
-      Prompt.text("Enter sso start url (e.g.: https://<an-example.com>.awsapps.com/start/#/)")
+  def get_start_url(config) do
+    start_url =
+      Keyword.get(
+        config.args,
+        :start_url
+      ) ||
+        Prompt.text("Enter sso start url (e.g.: https://<an-example.com>.awsapps.com/start/#/)")
+
+    Map.put(config, :start_url, start_url)
   end
 
-  def get_region(args) do
-    Keyword.get(args, :region) || Prompt.text("Enter aws region (e.g.: us-west-2)")
+  def get_region(config) do
+    region =
+      Keyword.get(config.args, :region) ||
+        Prompt.text("Enter aws region where AWS resources are hosted (e.g.: us-west-2)")
+
+    sso_region =
+      Keyword.get(config.args, :sso_region) ||
+        Prompt.text("Enter aws region where AWS access portal is hosted (e.g.: us-west-2)")
+
+    config
+    |> Map.put(:region, region)
+    |> Map.put(:client, %AWS.Client{region: sso_region})
+    |> Map.put(:sso_region, sso_region)
   end
 
   def request_until(config, expires_in) do
@@ -107,7 +150,7 @@ defmodule AwsSsoConfigGenerator.Util do
       AWS.SSOOIDC.register_client(
         config.client,
         %{"clientName" => config.client_name, "clientType" => "public"},
-        sign_request?: false
+        aws_request_options()
       )
 
     %{
@@ -134,7 +177,7 @@ defmodule AwsSsoConfigGenerator.Util do
           "clientSecret" => config.client_secret,
           "startUrl" => config.start_url
         },
-        sign_request?: false
+        aws_request_options()
       )
 
     %{
@@ -157,13 +200,17 @@ defmodule AwsSsoConfigGenerator.Util do
     AWS.SSOOIDC.create_token(
       config.client,
       request,
-      sign_request?: false
+      aws_request_options()
     )
   end
 
   def sso_list_accounts(config, current_token) do
-    case AWS.SSO.list_accounts(config.client, nil, current_token, config.access_token,
-           sign_request?: false
+    case AWS.SSO.list_accounts(
+           config.client,
+           nil,
+           current_token,
+           config.access_token,
+           aws_request_options()
          ) do
       {:ok, %{"accountList" => account_list, "nextToken" => next_token}, _} ->
         if is_nil(next_token) do
@@ -185,19 +232,104 @@ defmodule AwsSsoConfigGenerator.Util do
 
   def sso_list_account_roles(config, account_id) do
     {:ok, %{"roleList" => role_list}, _} =
-      AWS.SSO.list_account_roles(config.client, account_id, nil, nil, config.access_token,
-        sign_request?: false
+      AWS.SSO.list_account_roles(
+        config.client,
+        account_id,
+        nil,
+        nil,
+        config.access_token,
+        aws_request_options()
       )
 
     role_list
   end
 
-  def config_sort_account_roles(config) do
+  def maybe_save_debug_data(config) do
+    if Keyword.get(config.args, :debug) do
+      debug_file = Path.expand(Path.join(System.user_home!(), ".aws/config.debug.exs"))
+      Logger.debug("Debug mode enabled saving config to #{debug_file}")
+
+      config =
+        Map.take(config, [
+          :account_list,
+          :account_roles,
+          :region,
+          :start_url,
+          :output_file,
+          :template,
+          :template_file
+        ])
+
+      File.write!(debug_file, inspect(config), limit: :infinity, printable_limit: :infinity)
+    end
+
+    config
+  end
+
+  def maybe_load_template(config) do
+    if File.exists?(config.template_file) do
+      Logger.info("Loaded template #{config.template_file}")
+      json = File.read!(config.template_file) |> JSON.decode!()
+
+      json =
+        ["accounts", "roles"]
+        |> Enum.reduce(json, fn key, json -> add_missing_template_key(json, key) end)
+
+      Map.put(config, :template, json)
+    else
+      config
+    end
+  end
+
+  def add_missing_template_key(json, key) do
+    if is_map_key(json, key) do
+      json
+    else
+      Map.put(json, key, %{})
+    end
+  end
+
+  def duplicate_keys_with_new_keys(config) do
     account_roles =
       config.account_roles
-      |> Enum.sort_by(&Map.get(&1, "accountId"))
+      |> Enum.map(fn map ->
+        account_id = Map.get(map, "accountId")
+        role_name = Map.get(map, "roleName")
+
+        map
+        |> Map.put("accountIdNew", account_id)
+        |> Map.put("roleNameNew", role_name)
+      end)
 
     %{config | account_roles: account_roles}
+  end
+
+  def maybe_rename_accounts_and_roles(config) when map_size(config.template) == 0, do: config
+
+  def maybe_rename_accounts_and_roles(config) do
+    account_roles =
+      config.account_roles
+      |> Enum.map(fn account_role ->
+        account_role
+        |> maybe_update_account_or_role("accountId", config.template, "accounts")
+        |> maybe_update_account_or_role("roleName", config.template, "roles")
+      end)
+
+    %{config | account_roles: account_roles}
+  end
+
+  def maybe_update_account_or_role(account_role, account_role_key, template, template_key) do
+    account_role_key_value = Map.get(account_role, account_role_key)
+
+    template_map = Map.get(template, template_key)
+
+    case Map.get(template_map, account_role_key_value) do
+      nil ->
+        account_role
+
+      new_value ->
+        Map.put(account_role, "#{account_role_key}New", new_value)
+    end
   end
 
   def config_template_header() do
@@ -211,23 +343,43 @@ defmodule AwsSsoConfigGenerator.Util do
     """
   end
 
-  def config_template(config, %{"accountId" => account_id, "roleName" => role_name}) do
+  def config_template(config, %{
+        "accountId" => account_id,
+        "accountIdNew" => account_id_new,
+        "roleName" => role_name,
+        "roleNameNew" => role_name_new
+      }) do
+    profile =
+      if String.length(role_name_new) == 0 do
+        account_id_new
+      else
+        "#{account_id_new}-#{role_name_new}"
+      end
+
     """
-    # AWS_PROFILE=#{account_id}-#{role_name} aws sts get-caller-identity
-    [profile #{account_id}-#{role_name}]
+    # AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=#{profile} aws sts get-caller-identity
+    [profile #{profile}]
     sso_start_url = #{config.start_url}
-    sso_region = #{config.region}
+    sso_region = #{config.sso_region}
     sso_account_id = #{account_id}
     sso_role_name = #{role_name}
-    region = us-west-2
+    region = #{config.region}
     output = json
     """
   end
 
   def generate_config(config) do
-    [config_template_header()] ++
-      Enum.map(config.account_roles, fn account_role ->
+    profiles =
+      config.account_roles
+      |> Enum.map(fn account_role ->
         config_template(config, account_role)
       end)
+      |> Enum.sort()
+
+    [config_template_header()] ++ profiles
+  end
+
+  def aws_request_options() do
+    [sign_request?: false, enable_retries?: true]
   end
 end

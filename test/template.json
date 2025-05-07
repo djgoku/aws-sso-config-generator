@@ -1,0 +1,11 @@
+{
+  "accounts": {
+    "111111": "dev",
+    "222222": "uat",
+    "333333": "prod"
+  },
+  "roles": {
+    "Admin": "",
+    "ReadOnly": "read"
+  }
+}

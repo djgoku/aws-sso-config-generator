@@ -111,51 +111,51 @@
         }
       }
     },
-    "beam27Packages.elixir-ls@latest": {
-      "last_modified": "2025-04-05T00:48:53Z",
-      "resolved": "github:NixOS/nixpkgs/250b695f41e0e2f5afbf15c6b12480de1fe0001b#beam27Packages.elixir-ls",
+    "beam27Packages.elixir-ls@0.26.4": {
+      "last_modified": "2025-03-02T11:46:57Z",
+      "resolved": "github:NixOS/nixpkgs/b58e19b11fe72175fd7a9e014a4786a91e99da5f#beam27Packages.elixir-ls",
       "source": "devbox-search",
-      "version": "0.27.2",
+      "version": "0.26.4",
       "systems": {
         "aarch64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/nxj7s2z8kfr6hisk94j6407ljh5aw1ck-elixir-ls-0.27.2",
+              "path": "/nix/store/xfgs8bich8hf9j0q3bx1nk0dqahd6j6c-elixir-ls-0.26.4",
               "default": true
             }
           ],
-          "store_path": "/nix/store/nxj7s2z8kfr6hisk94j6407ljh5aw1ck-elixir-ls-0.27.2"
+          "store_path": "/nix/store/xfgs8bich8hf9j0q3bx1nk0dqahd6j6c-elixir-ls-0.26.4"
         },
         "aarch64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/hcn1y1jbalmy9mknx4vb85mg7gcmv8ix-elixir-ls-0.27.2",
+              "path": "/nix/store/xmk26kzrxwlr8w9mvbdghfh1hqyninnw-elixir-ls-0.26.4",
               "default": true
             }
           ],
-          "store_path": "/nix/store/hcn1y1jbalmy9mknx4vb85mg7gcmv8ix-elixir-ls-0.27.2"
+          "store_path": "/nix/store/xmk26kzrxwlr8w9mvbdghfh1hqyninnw-elixir-ls-0.26.4"
         },
         "x86_64-darwin": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/0gisn7j9pr8d6fqnhcy9ibxxpz93w6ai-elixir-ls-0.27.2",
+              "path": "/nix/store/f05vh1vkd164kmhcg46k99hzhdk6my3i-elixir-ls-0.26.4",
               "default": true
             }
           ],
-          "store_path": "/nix/store/0gisn7j9pr8d6fqnhcy9ibxxpz93w6ai-elixir-ls-0.27.2"
+          "store_path": "/nix/store/f05vh1vkd164kmhcg46k99hzhdk6my3i-elixir-ls-0.26.4"
         },
         "x86_64-linux": {
           "outputs": [
             {
               "name": "out",
-              "path": "/nix/store/279x4jxl422ly3q78ycx9m3rkds0kb3i-elixir-ls-0.27.2",
+              "path": "/nix/store/ph1xl3gmy92rlgipyjl7j361cjvcimw4-elixir-ls-0.26.4",
               "default": true
             }
           ],
-          "store_path": "/nix/store/279x4jxl422ly3q78ycx9m3rkds0kb3i-elixir-ls-0.27.2"
+          "store_path": "/nix/store/ph1xl3gmy92rlgipyjl7j361cjvcimw4-elixir-ls-0.26.4"
         }
       }
     },

@@ -26,29 +26,37 @@ xattr -dr com.apple.quarantine ~/aws-sso-config-generator
 chmod +x ~/aws-sso-config-generator
 #+end_example
 
+More information here https://apple.stackexchange.com/a/436677
+
 ** Usage
 *Note: if no parameters are passed user will be prompted for ~region~ and ~start_url~.*
 
 Example call of ~aws-sso-config-generator~ where AWS access portal is in ~us-west-2~ with a url of ~https://​<example>.awsapps.com/start/#/~.
 
 #+begin_example
-aws-sso-config-generator --region us-west-2 --start-url https://<example>.awsapps.com/start/#/
+aws-sso-config-generator --region us-west-2 --sso-region us-east-1 --start-url https://<example>.awsapps.com/start/#/
 #+end_example
 
 #+begin_example
-aws-sso-config-generator -r us-west-2 -u https://<example>.awsapps.com/start/#/
+aws-sso-config-generator -r us-west-2 --sso-region us-east-1 -u https://<example>.awsapps.com/start/#/
 #+end_example
 
 ** Parameters
 
-| Option              | Type   | Example                                   | Description                               |
-|---------------------+--------+-------------------------------------------+-------------------------------------------|
-| --region or -r    | string | -r us-west-2                              | Region where AWS access portal is hosted. |
-| --start-url or -u | string | -u https://<example>.awsapps.com/start/#/ | The URL for the AWS access portal         |
-| --help or -h      | N/A    | -h                                        | Help menu                                 |
+| Option              | Type   | Example                                   | Description                                     | Default                     |
+|---------------------+--------+-------------------------------------------+-------------------------------------------------+-----------------------------|
+| --sso-region      | string | --sso-region us-west-2                    | Region where AWS resources are hosted.          |                             |
+| --region or -r    | string | -r us-west-2                              | Region where AWS access portal is hosted.       |                             |
+| --start-url or -u | string | -u https://<example>.awsapps.com/start/#/ | The URL for the AWS access portal               |                             |
+| --help or -h      | N/A    | -h                                        | Help menu                                       |                             |
+| --template or -t  | string | -t ~/.aws/config.template.json            | JSON template file to re-kap accounts and roles | ~/.aws/config.template.json |
+| --out or -o       | string | -o ~/.aws/config.generated                | Output file for generated AWS config file       | ~/.aws/config.generated     |
 
-** Example Config (~/.aws/sso.generated)
 
+** Example Config (~/.aws/config.generated)
+
+~/.aws/config.generated:
+#+name: ~/.aws/config.generated
 #+begin_example
 # config generated via https://github.com/djgoku/aws-sso-config-generator
 #
@@ -57,14 +65,45 @@ aws-sso-config-generator -r us-west-2 -u https://<example>.awsapps.com/start/#/
 # 1. log into aws sso via `aws sso login --profile use-any-profile-name`
 # 2. validate `AWS_PROFILE=use-any-profile-name aws sts get-caller-identity`
 
-# AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=1111111-RoleName aws sts get-caller-identity
-[profile 1111111-RoleName]
+# AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=1111111-ReadOnly aws sts get-caller-identity
+[profile 1111111-ReadOnly]
 sso_start_url = https://<example>.awsapps.com/start/#/
 sso_region = us-east-2
 sso_account_id = 1111111
-sso_role_name = RoleName
+sso_role_name = ReadOnly
 region = us-west-2
 output = json
+
+# AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=1111111-ReadOnly aws sts get-caller-identity
+[profile 1111111-ReadOnly]
+sso_start_url = https://<example>.awsapps.com/start/#/
+sso_region = us-east-2
+sso_account_id = 1111111
+sso_role_name = ReadOnly
+region = us-west-2
+output = json
+#+end_example
+
+** Example JSON Template (~/.aws/config.template.json)
+
+In the =template.json= structure, the values under the =accounts= and =roles= keys are used to replace their respective keys during config generation. For example:
+- ="111111"= in =accounts= will be replaced with ="dev"=
+- ="Admin"= in =roles= will be replaced with =""= (empty string)
+
+~/.aws/config.template:
+#+name: ~/.aws/config.template
+#+begin_example
+{
+  "accounts": {
+    "111111": "dev",
+    "222222": "uat",
+    "333333": "prod"
+  },
+  "roles": {
+    "Admin": "",
+    "ReadOnly": "read"
+  }
+}
 #+end_example
 
 ** Development
