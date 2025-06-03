@@ -11,7 +11,12 @@ env:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'djgoku'
+    if: |
+      github.repository_owner == 'djgoku' &&
+      (
+        (!startsWith(github.ref, 'refs/tags/')) ||
+        (startsWith(github.ref, 'refs/tags/') && github.actor == 'djgoku')
+      )
     steps:
       - uses: actions/checkout@v4
       - name: Install devbox with empty devbox.json
