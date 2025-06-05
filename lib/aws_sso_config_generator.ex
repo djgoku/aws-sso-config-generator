@@ -43,8 +43,6 @@ defmodule AwsSsoConfigGenerator do
       |> Util.sso_oidc_register_client()
       |> Util.sso_oidc_start_device_authorization()
 
-    Util.browser_open(config.verification_uri_complete)
-
     output = """
     aws-sso-config-generator #{Application.spec(:aws_sso_config_generator, :vsn)}
 
@@ -58,6 +56,8 @@ defmodule AwsSsoConfigGenerator do
     """
 
     IO.puts(output)
+
+    Util.browser_open(config.verification_uri_complete)
 
     maybe_access_token = Util.request_until(config, config.expires_in)
 
