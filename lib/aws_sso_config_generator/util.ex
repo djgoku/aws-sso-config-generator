@@ -368,16 +368,9 @@ defmodule AwsSsoConfigGenerator.Util do
         "#{account_id_new}-#{role_name_new}"
       end
 
-    """
-    # AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=#{profile} aws sts get-caller-identity
-    [profile #{profile}]
-    sso_start_url = #{config.start_url}
-    sso_region = #{config.sso_region}
-    sso_account_id = #{account_id}
-    sso_role_name = #{role_name}
-    region = #{config.region}
-    output = json
-    """
+    config
+    |> create_profile(profile, account_id, role_name, :legacy_iam_identity_center)
+    |> create_profile(profile, account_id, role_name, :iam_identity_center)
   end
 
   def generate_config(config) do
@@ -389,6 +382,39 @@ defmodule AwsSsoConfigGenerator.Util do
       |> Enum.sort()
 
     [config_template_header()] ++ profiles
+  def create_profile(config, profile, account_id, role_name, :legacy_iam_identity_center) do
+    legacy_iam_identity_center =
+      """
+      # AWS_CONFIG_FILE=#{config.output_file}-legacy AWS_PROFILE=#{profile} aws sts get-caller-identity
+      [profile #{profile}]
+      sso_start_url = #{config.start_url}
+      sso_region = #{config.sso_region}
+      sso_account_id = #{account_id}
+      sso_role_name = #{role_name}
+      region = #{config.region}
+      output = json
+      """
+
+    legacy_iam_identity_center = [legacy_iam_identity_center | config.legacy_iam_identity_center]
+
+    %{config | legacy_iam_identity_center: legacy_iam_identity_center}
+  end
+
+  def create_profile(config, profile, account_id, role_name, :iam_identity_center) do
+    iam_identity_center =
+      """
+      # AWS_CONFIG_FILE=#{config.output_file} AWS_PROFILE=#{profile} aws sts get-caller-identity
+      [profile #{profile}]
+      sso_session = #{config.sso_session_name}
+      sso_account_id = #{account_id}
+      sso_role_name = #{role_name}
+      region = #{config.region}
+      output = json
+      """
+
+    iam_identity_center = [iam_identity_center | config.iam_identity_center]
+
+    %{config | iam_identity_center: iam_identity_center}
   end
 
   def aws_request_options() do
