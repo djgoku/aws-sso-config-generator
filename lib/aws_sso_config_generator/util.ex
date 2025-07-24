@@ -44,7 +44,8 @@ defmodule AwsSsoConfigGenerator.Util do
           help: :boolean,
           template: :string,
           out: :string,
-          debug: :boolean
+          debug: :boolean,
+          sso_session_name: :string
         ],
         aliases: [r: :region, u: :start_url, h: :help, t: :template, o: :out]
       )
@@ -87,12 +88,13 @@ defmodule AwsSsoConfigGenerator.Util do
 
     Options:
 
-    --sso-region     - Region where AWS access portal is hosted.
-    --region|-r      - Region where AWS resources are hosted.
-    --start-url|-u   - The URL for the AWS access portal
-    --help|-h        - Help menu
-    --template|-t    - JSON template file to re-map accounts and roles defaults to ~/.aws/config.template.json
-    --out|-o         - Output file which defaults to ~/.aws/config.generated
+    --sso-session-name     - AWS SSO Session Name used in IAM Identity Center config (non-legacy)
+    --sso-region           - Region where AWS access portal is hosted.
+    --region|-r            - Region where AWS resources are hosted.
+    --start-url|-u         - The URL for the AWS access portal
+    --help|-h              - Help menu
+    --template|-t          - JSON template file to re-map accounts and roles defaults to ~/.aws/config.template.json
+    --out|-o               - Output file which defaults to ~/.aws/config.generated
     """
   end
 
@@ -120,6 +122,16 @@ defmodule AwsSsoConfigGenerator.Util do
     |> Map.put(:region, region)
     |> Map.put(:client, %AWS.Client{region: sso_region})
     |> Map.put(:sso_region, sso_region)
+  end
+
+  def get_sso_session_name(config) do
+    sso_session_name = Keyword.get(config.args, :sso_session_name)
+
+    if sso_session_name do
+      Map.put(config, :sso_session_name, sso_session_name)
+    else
+      config
+    end
   end
 
   def request_until(config, expires_in) do

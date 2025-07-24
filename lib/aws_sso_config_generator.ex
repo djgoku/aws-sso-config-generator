@@ -17,6 +17,7 @@ defmodule AwsSsoConfigGenerator do
             register_client: nil,
             region: nil,
             sso_region: nil,
+            sso_session_name: "my-sso",
             start_url: nil,
             template: %{},
             template_file: nil,
@@ -40,6 +41,7 @@ defmodule AwsSsoConfigGenerator do
       |> Util.map_args()
       |> Util.get_region()
       |> Util.get_start_url()
+      |> Util.get_sso_session_name()
       |> Util.sso_oidc_register_client()
       |> Util.sso_oidc_start_device_authorization()
 
