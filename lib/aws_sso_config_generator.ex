@@ -70,7 +70,7 @@ defmodule AwsSsoConfigGenerator do
       exit(:error_unabled_to_create_token)
     end
 
-    config_data =
+    config =
       %{config | access_token: maybe_access_token}
       |> Util.sso_list_accounts(nil)
       |> Util.sso_list_account_roles()
@@ -79,10 +79,13 @@ defmodule AwsSsoConfigGenerator do
       |> Util.maybe_save_debug_data()
       |> Util.maybe_rename_accounts_and_roles()
       |> Util.generate_config()
-      |> Enum.join("\n")
 
-    File.write(config.output_file, config_data)
+    File.write(config.output_file, config.iam_identity_center |> Enum.join("\n"))
     IO.puts("wrote generated to #{config.output_file}")
+
+    legacy_output_file = "#{config.output_file}-legacy"
+    File.write(legacy_output_file, config.legacy_iam_identity_center |> Enum.join("\n"))
+    IO.puts("wrote generated to #{legacy_output_file}")
 
     System.halt(0)
   end

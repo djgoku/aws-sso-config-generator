@@ -374,14 +374,33 @@ defmodule AwsSsoConfigGenerator.Util do
   end
 
   def generate_config(config) do
-    profiles =
+    config =
       config.account_roles
-      |> Enum.map(fn account_role ->
+      |> Enum.reduce(config, fn account_role, config ->
         config_template(config, account_role)
       end)
-      |> Enum.sort()
 
-    [config_template_header()] ++ profiles
+    legacy_iam_identity_center = [config_template_header()] ++ config.legacy_iam_identity_center
+
+    iam_identity_center =
+      [config_template_header()] ++
+        config.iam_identity_center ++
+        [
+          """
+          [sso-session #{config.sso_session_name}]
+          sso_region = #{config.sso_region}
+          sso_start_url = #{config.start_url}
+          sso_registration_scopes = sso:account:access
+          """
+        ]
+
+    %{
+      config
+      | legacy_iam_identity_center: legacy_iam_identity_center,
+        iam_identity_center: iam_identity_center
+    }
+  end
+
   def create_profile(config, profile, account_id, role_name, :legacy_iam_identity_center) do
     legacy_iam_identity_center =
       """
