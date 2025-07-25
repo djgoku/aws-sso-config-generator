@@ -9,7 +9,7 @@ defmodule AwsSsoConfigGenerator.UtilTest do
           "{\"accounts\":{\"111111\":\"dev\",\"222222\":\"uat\",\"333333\":\"prod\"},\"roles\":{\"Admin\":\"\",\"ReadOnly\":\"read\"}}"
         )
 
-      config = %{
+      config = %AwsSsoConfigGenerator{
         account_roles: [
           %{"accountId" => "333333", "roleName" => "ReadOnly"},
           %{"accountId" => "333333", "roleName" => "Admin"},
@@ -31,7 +31,7 @@ defmodule AwsSsoConfigGenerator.UtilTest do
         |> AwsSsoConfigGenerator.Util.maybe_load_template()
         |> AwsSsoConfigGenerator.Util.maybe_rename_accounts_and_roles()
 
-      expected_config = %{
+      expected_config = %AwsSsoConfigGenerator{
         account_roles: [
           %{
             "accountId" => "333333",
@@ -81,7 +81,7 @@ defmodule AwsSsoConfigGenerator.UtilTest do
     end
 
     test "change_account_for_one_set_and_same_for_role" do
-      config = %{
+      config = %AwsSsoConfigGenerator{
         account_roles: [
           %{"accountId" => "333333", "roleName" => "ReadOnly"},
           %{"accountId" => "333333", "roleName" => "Admin"},
@@ -102,7 +102,7 @@ defmodule AwsSsoConfigGenerator.UtilTest do
         |> AwsSsoConfigGenerator.Util.maybe_load_template()
         |> AwsSsoConfigGenerator.Util.maybe_rename_accounts_and_roles()
 
-      expected_config = %{
+      expected_config = %AwsSsoConfigGenerator{
         account_roles: [
           %{
             "accountId" => "333333",
@@ -241,7 +241,7 @@ defmodule AwsSsoConfigGenerator.UtilTest do
     end
 
     test "region_sso_region" do
-      config = %{
+      config = %AwsSsoConfigGenerator{
         account_roles: [
           %{"accountId" => "333333", "roleName" => "ReadOnly"},
           %{"accountId" => "333333", "roleName" => "Admin"}
@@ -259,9 +259,11 @@ defmodule AwsSsoConfigGenerator.UtilTest do
         |> AwsSsoConfigGenerator.Util.maybe_load_template()
         |> AwsSsoConfigGenerator.Util.maybe_rename_accounts_and_roles()
 
+      # :legacy_iam_identity_center
       regions =
         config
         |> AwsSsoConfigGenerator.Util.generate_config()
+        |> Map.get(:legacy_iam_identity_center)
         |> Enum.filter(fn profile -> String.contains?(profile, "region = #{config.region}") end)
 
       assert length(regions) == 2
@@ -269,11 +271,31 @@ defmodule AwsSsoConfigGenerator.UtilTest do
       sso_regions =
         config
         |> AwsSsoConfigGenerator.Util.generate_config()
+        |> Map.get(:legacy_iam_identity_center)
         |> Enum.filter(fn profile ->
           String.contains?(profile, "sso_region = #{config.sso_region}")
         end)
 
       assert length(sso_regions) == 2
+
+      # :iam_identity_center
+      regions =
+        config
+        |> AwsSsoConfigGenerator.Util.generate_config()
+        |> Map.get(:iam_identity_center)
+        |> Enum.filter(fn profile -> String.contains?(profile, "region = #{config.region}") end)
+
+      assert length(regions) == 2
+
+      sso_regions =
+        config
+        |> AwsSsoConfigGenerator.Util.generate_config()
+        |> Map.get(:iam_identity_center)
+        |> Enum.filter(fn profile ->
+          String.contains?(profile, "sso_region = #{config.sso_region}")
+        end)
+
+      assert length(sso_regions) == 1
     end
   end
 end

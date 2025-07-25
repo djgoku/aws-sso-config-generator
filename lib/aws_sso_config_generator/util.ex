@@ -44,7 +44,8 @@ defmodule AwsSsoConfigGenerator.Util do
           help: :boolean,
           template: :string,
           out: :string,
-          debug: :boolean
+          debug: :boolean,
+          sso_session_name: :string
         ],
         aliases: [r: :region, u: :start_url, h: :help, t: :template, o: :out]
       )
@@ -87,12 +88,13 @@ defmodule AwsSsoConfigGenerator.Util do
 
     Options:
 
-    --sso-region     - Region where AWS access portal is hosted.
-    --region|-r      - Region where AWS resources are hosted.
-    --start-url|-u   - The URL for the AWS access portal
-    --help|-h        - Help menu
-    --template|-t    - JSON template file to re-map accounts and roles defaults to ~/.aws/config.template.json
-    --out|-o         - Output file which defaults to ~/.aws/config.generated
+    --sso-session-name     - AWS SSO Session Name used in IAM Identity Center config (non-legacy)
+    --sso-region           - Region where AWS access portal is hosted.
+    --region|-r            - Region where AWS resources are hosted.
+    --start-url|-u         - The URL for the AWS access portal
+    --help|-h              - Help menu
+    --template|-t          - JSON template file to re-map accounts and roles defaults to ~/.aws/config.template.json
+    --out|-o               - Output file which defaults to ~/.aws/config.generated
     """
   end
 
@@ -120,6 +122,16 @@ defmodule AwsSsoConfigGenerator.Util do
     |> Map.put(:region, region)
     |> Map.put(:client, %AWS.Client{region: sso_region})
     |> Map.put(:sso_region, sso_region)
+  end
+
+  def get_sso_session_name(config) do
+    sso_session_name = Keyword.get(config.args, :sso_session_name)
+
+    if sso_session_name do
+      Map.put(config, :sso_session_name, sso_session_name)
+    else
+      config
+    end
   end
 
   def request_until(config, expires_in) do
@@ -356,27 +368,72 @@ defmodule AwsSsoConfigGenerator.Util do
         "#{account_id_new}-#{role_name_new}"
       end
 
-    """
-    # AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=#{profile} aws sts get-caller-identity
-    [profile #{profile}]
-    sso_start_url = #{config.start_url}
-    sso_region = #{config.sso_region}
-    sso_account_id = #{account_id}
-    sso_role_name = #{role_name}
-    region = #{config.region}
-    output = json
-    """
+    config
+    |> create_profile(profile, account_id, role_name, :legacy_iam_identity_center)
+    |> create_profile(profile, account_id, role_name, :iam_identity_center)
   end
 
   def generate_config(config) do
-    profiles =
+    config =
       config.account_roles
-      |> Enum.map(fn account_role ->
+      |> Enum.reduce(config, fn account_role, config ->
         config_template(config, account_role)
       end)
-      |> Enum.sort()
 
-    [config_template_header()] ++ profiles
+    legacy_iam_identity_center = [config_template_header()] ++ config.legacy_iam_identity_center
+
+    iam_identity_center =
+      [config_template_header()] ++
+        config.iam_identity_center ++
+        [
+          """
+          [sso-session #{config.sso_session_name}]
+          sso_region = #{config.sso_region}
+          sso_start_url = #{config.start_url}
+          sso_registration_scopes = sso:account:access
+          """
+        ]
+
+    %{
+      config
+      | legacy_iam_identity_center: legacy_iam_identity_center,
+        iam_identity_center: iam_identity_center
+    }
+  end
+
+  def create_profile(config, profile, account_id, role_name, :legacy_iam_identity_center) do
+    legacy_iam_identity_center =
+      """
+      # AWS_CONFIG_FILE=#{config.output_file}-legacy AWS_PROFILE=#{profile} aws sts get-caller-identity
+      [profile #{profile}]
+      sso_start_url = #{config.start_url}
+      sso_region = #{config.sso_region}
+      sso_account_id = #{account_id}
+      sso_role_name = #{role_name}
+      region = #{config.region}
+      output = json
+      """
+
+    legacy_iam_identity_center = [legacy_iam_identity_center | config.legacy_iam_identity_center]
+
+    %{config | legacy_iam_identity_center: legacy_iam_identity_center}
+  end
+
+  def create_profile(config, profile, account_id, role_name, :iam_identity_center) do
+    iam_identity_center =
+      """
+      # AWS_CONFIG_FILE=#{config.output_file} AWS_PROFILE=#{profile} aws sts get-caller-identity
+      [profile #{profile}]
+      sso_session = #{config.sso_session_name}
+      sso_account_id = #{account_id}
+      sso_role_name = #{role_name}
+      region = #{config.region}
+      output = json
+      """
+
+    iam_identity_center = [iam_identity_center | config.iam_identity_center]
+
+    %{config | iam_identity_center: iam_identity_center}
   end
 
   def aws_request_options() do

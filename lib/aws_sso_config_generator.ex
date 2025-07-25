@@ -12,11 +12,14 @@ defmodule AwsSsoConfigGenerator do
             client_name: "aws-sso-config-generator",
             device_code: nil,
             expires_in: nil,
+            iam_identity_center: [],
             interval: nil,
+            legacy_iam_identity_center: [],
             output_file: nil,
             register_client: nil,
             region: nil,
             sso_region: nil,
+            sso_session_name: "my-sso",
             start_url: nil,
             template: %{},
             template_file: nil,
@@ -40,6 +43,7 @@ defmodule AwsSsoConfigGenerator do
       |> Util.map_args()
       |> Util.get_region()
       |> Util.get_start_url()
+      |> Util.get_sso_session_name()
       |> Util.sso_oidc_register_client()
       |> Util.sso_oidc_start_device_authorization()
 
@@ -66,7 +70,7 @@ defmodule AwsSsoConfigGenerator do
       exit(:error_unabled_to_create_token)
     end
 
-    config_data =
+    config =
       %{config | access_token: maybe_access_token}
       |> Util.sso_list_accounts(nil)
       |> Util.sso_list_account_roles()
@@ -75,10 +79,13 @@ defmodule AwsSsoConfigGenerator do
       |> Util.maybe_save_debug_data()
       |> Util.maybe_rename_accounts_and_roles()
       |> Util.generate_config()
-      |> Enum.join("\n")
 
-    File.write(config.output_file, config_data)
+    File.write(config.output_file, config.iam_identity_center |> Enum.join("\n"))
     IO.puts("wrote generated to #{config.output_file}")
+
+    legacy_output_file = "#{config.output_file}-legacy"
+    File.write(legacy_output_file, config.legacy_iam_identity_center |> Enum.join("\n"))
+    IO.puts("wrote generated to #{legacy_output_file}")
 
     System.halt(0)
   end
