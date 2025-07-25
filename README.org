@@ -43,17 +43,20 @@ aws-sso-config-generator -r us-west-2 --sso-region us-east-1 -u https://<example
 
 ** Parameters
 
-| Option              | Type   | Example                                   | Description                                     | Default                     |
-|---------------------+--------+-------------------------------------------+-------------------------------------------------+-----------------------------|
-| --sso-region      | string | --sso-region us-west-2                    | Region where AWS resources are hosted.          |                             |
-| --region or -r    | string | -r us-west-2                              | Region where AWS access portal is hosted.       |                             |
-| --start-url or -u | string | -u https://<example>.awsapps.com/start/#/ | The URL for the AWS access portal               |                             |
-| --help or -h      | N/A    | -h                                        | Help menu                                       |                             |
-| --template or -t  | string | -t ~/.aws/config.template.json            | JSON template file to re-kap accounts and roles | ~/.aws/config.template.json |
-| --out or -o       | string | -o ~/.aws/config.generated                | Output file for generated AWS config file       | ~/.aws/config.generated     |
+| Option               | Type   | Example                                   | Description                                                       | Default                     |
+|----------------------+--------+-------------------------------------------+-------------------------------------------------------------------+-----------------------------|
+| --sso-region       | string | --sso-region us-west-2                    | Region where AWS resources are hosted.                            |                             |
+| --region or -r     | string | -r us-west-2                              | Region where AWS access portal is hosted.                         |                             |
+| --start-url or -u  | string | -u https://<example>.awsapps.com/start/#/ | The URL for the AWS access portal                                 |                             |
+| --help or -h       | N/A    | -h                                        | Help menu                                                         |                             |
+| --template or -t   | string | -t ~/.aws/config.template.json            | JSON template file to re-kap accounts and roles                   | ~/.aws/config.template.json |
+| --out or -o        | string | -o ~/.aws/config.generated                | Output file for generated AWS config file                         | ~/.aws/config.generated     |
+| --sso-session-name | string | --sso-session-name my-sso                 | SSO Session name used in IAM Identity Center config (non-legacy). | my-sso                      |
 
 
-** Example Config (~/.aws/config.generated)
+** Example IAM Identity Center Config (~/.aws/config.generated)
+
+More about this config type: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html
 
 ~/.aws/config.generated:
 #+name: ~/.aws/config.generated
@@ -67,6 +70,40 @@ aws-sso-config-generator -r us-west-2 --sso-region us-east-1 -u https://<example
 
 # AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=1111111-ReadOnly aws sts get-caller-identity
 [profile 1111111-ReadOnly]
+sso_session = my-sso
+sso_account_id = 1111111
+sso_role_name = ReadOnly
+region = us-west-2
+output = json
+
+# AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=1111111-ReadOnly aws sts get-caller-identity
+[profile 1111111-ReadOnly]
+sso_session = my-sso
+sso_account_id = 1111111
+sso_role_name = ReadOnly
+region = us-west-2
+output = json
+
+[sso-session my-sso]
+sso_region = us-east-2
+sso_start_url = https://<example>.awsapps.com/start/#/
+sso_registration_scopes = sso:account:access
+#+end_example
+
+** Example Legacy Config (~/.aws/config.generated-legacy)
+
+~/.aws/config.generated:
+#+name: ~/.aws/config.generated
+#+begin_example
+# config generated via https://github.com/djgoku/aws-sso-config-generator
+#
+# This requires AWS CLI v2
+#
+# 1. log into aws sso via `aws sso login --profile use-any-profile-name`
+# 2. validate `AWS_PROFILE=use-any-profile-name aws sts get-caller-identity`
+
+# AWS_CONFIG_FILE=~/.aws/config.generated-legacy AWS_PROFILE=1111111-ReadOnly aws sts get-caller-identity
+[profile 1111111-ReadOnly]
 sso_start_url = https://<example>.awsapps.com/start/#/
 sso_region = us-east-2
 sso_account_id = 1111111
@@ -74,7 +111,7 @@ sso_role_name = ReadOnly
 region = us-west-2
 output = json
 
-# AWS_CONFIG_FILE=~/.aws/config.generated AWS_PROFILE=1111111-ReadOnly aws sts get-caller-identity
+# AWS_CONFIG_FILE=~/.aws/config.generated-legacy AWS_PROFILE=1111111-ReadOnly aws sts get-caller-identity
 [profile 1111111-ReadOnly]
 sso_start_url = https://<example>.awsapps.com/start/#/
 sso_region = us-east-2
