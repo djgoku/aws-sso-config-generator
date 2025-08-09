@@ -19,10 +19,10 @@ defmodule AwsSsoConfigGenerator.MixProject do
       extra_applications: [:logger]
     ]
 
-    if Mix.env() == :test or Mix.env() == :escript do
-      applications
-    else
+    if Application.get_env(:aws_sso_config_generator, :burrito) === true do
       applications ++ [mod: {AwsSsoConfigGenerator, []}]
+    else
+      applications
     end
   end
 
