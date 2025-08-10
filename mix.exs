@@ -29,11 +29,14 @@ defmodule AwsSsoConfigGenerator.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:assent, "~> 0.3"},
       {:burrito, "~> 1.0"},
       # {:aws, "~> 1.0.0", path: "./deps/aws"},
       {:aws, "~> 1.0.0"},
       {:hackney, "~> 1.18"},
-      {:prompt, "~> 0.10.0"}
+      {:prompt, "~> 0.10.0"},
+      {:plug, "~> 1.15"},
+      {:bandit, "~> 1.4"}
     ]
   end
 
