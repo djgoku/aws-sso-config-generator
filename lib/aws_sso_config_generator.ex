@@ -6,6 +6,10 @@ defmodule AwsSsoConfigGenerator do
             account_list: [],
             account_roles: [],
             args: [],
+            authorization_code: nil,
+            authorization_code_verifier: nil,
+            authorization_redirect_uri: nil,
+            authorization_server_pid: nil,
             client: nil,
             client_id: nil,
             client_secret: nil,
@@ -45,16 +49,33 @@ defmodule AwsSsoConfigGenerator do
       |> Util.get_region()
       |> Util.get_start_url()
       |> Util.get_sso_session_name()
+      |> AwsSsoConfigGenerator.AuthorizationCode.maybe_start_authorization_code()
       |> Util.sso_oidc_register_client()
-      |> Util.sso_oidc_start_device_authorization()
-
+      |> Util.sso_oidc_start_authorization()
 
     output = Util.console_output(config.verification_uri_complete)
     IO.puts(output)
 
     Util.browser_open(config.verification_uri_complete)
 
-    maybe_access_token = Util.request_until(config, config.expires_in)
+    maybe_access_token =
+      if config.grant_type == :device_code do
+        Util.request_until(config, config.expires_in)
+      else
+        # :authorization_code we need to way for a message from
+        # AwsSsoConfigGenerator.AuthorizationCode.Http that the
+        # callback was called
+        receive do
+          :shutdown ->
+            Logger.debug("Shutdown message received. Stopping server")
+        end
+
+        Process.exit(config.authorization_server_pid, :normal)
+
+        code = AwsSsoConfigGenerator.AuthorizationCode.Agent.get()
+        config = %{config | authorization_code: code}
+        Util.request_until(config, 30)
+      end
 
     if is_nil(maybe_access_token) do
       Logger.error("Unable to create token")
