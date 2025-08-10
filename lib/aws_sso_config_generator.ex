@@ -47,18 +47,8 @@ defmodule AwsSsoConfigGenerator do
       |> Util.sso_oidc_register_client()
       |> Util.sso_oidc_start_device_authorization()
 
-    output = """
-    aws-sso-config-generator #{Application.spec(:aws_sso_config_generator, :vsn)}
 
-    Tool to generate an AWS config file (~/.aws/config) after authenticating and authorizing AWS SSO IAM Identity Center.
-
-    Source code: https://github.com/djgoku/aws-sso-config-generator
-
-    Verification URI (copy and paste into browser if it doesn't open.)
-
-      #{config.verification_uri_complete}
-    """
-
+    output = Util.console_output(config.verification_uri_complete)
     IO.puts(output)
 
     Util.browser_open(config.verification_uri_complete)

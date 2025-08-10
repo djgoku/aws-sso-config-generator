@@ -436,6 +436,20 @@ defmodule AwsSsoConfigGenerator.Util do
     %{config | iam_identity_center: iam_identity_center}
   end
 
+  def console_output(url) do
+    """
+    aws-sso-config-generator #{Application.spec(:aws_sso_config_generator, :vsn)}
+
+    Tool to generate an AWS config file (~/.aws/config) after authenticating and authorizing AWS SSO IAM Identity Center.
+
+    Source code: https://github.com/djgoku/aws-sso-config-generator
+
+    Verification URI (copy and paste into browser if it doesn't open.)
+
+      #{url}
+    """
+  end
+
   def aws_request_options() do
     [sign_request?: false, enable_retries?: true]
   end
