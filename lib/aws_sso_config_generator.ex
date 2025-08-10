@@ -2,6 +2,8 @@ defmodule AwsSsoConfigGenerator do
   require Logger
   alias AwsSsoConfigGenerator.Util
 
+  @dialyzer {:nowarn_function, start: 2, main: 1}
+
   defstruct access_token: nil,
             account_list: [],
             account_roles: [],
