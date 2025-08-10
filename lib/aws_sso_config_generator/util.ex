@@ -166,57 +166,115 @@ defmodule AwsSsoConfigGenerator.Util do
     end
   end
 
+  def sso_oidc_register_client_config(%{grant_type: :authorization_code} = config) do
+    %{
+      "clientName" => config.client_name,
+      "clientType" => "public",
+      "grantTypes" => ["authorization_code"],
+      "scopes" => ["sso:account:access"],
+      "issuerUrl" => config.start_url,
+      "redirectUris" => [config.authorization_redirect_uri]
+    }
+  end
+
+  def sso_oidc_register_client_config(%{grant_type: _} = config) do
+    %{
+      "clientName" => config.client_name,
+      "clientType" => "public",
+      "grantTypes" => ["urn:ietf:params:oauth:grant-type:device_code"],
+      "issuerUrl" => config.start_url
+    }
+  end
+
   def sso_oidc_register_client(config) do
-    {:ok, %{"clientId" => client_id, "clientSecret" => client_secret} = register_client, _} =
-      AWS.SSOOIDC.register_client(
-        config.client,
-        %{"clientName" => config.client_name, "clientType" => "public"},
-        aws_request_options()
-      )
+    register_client_config = sso_oidc_register_client_config(config)
 
-    %{
-      config
-      | client_id: client_id,
-        client_secret: client_secret,
-        register_client: register_client
-    }
-  end
-
-  def sso_oidc_start_device_authorization(config) do
-    {:ok,
-     %{
-       "deviceCode" => device_code,
-       "expiresIn" => expires_in,
-       "interval" => interval,
-       "verificationUriComplete" => verification_uri_complete
-     },
-     _other} =
-      AWS.SSOOIDC.start_device_authorization(
-        config.client,
+    case AWS.SSOOIDC.register_client(
+           config.client,
+           register_client_config,
+           aws_request_options()
+         ) do
+      {:ok, %{"clientId" => client_id, "clientSecret" => client_secret} = register_client, _} ->
         %{
-          "clientId" => config.client_id,
-          "clientSecret" => config.client_secret,
-          "startUrl" => config.start_url
-        },
-        aws_request_options()
-      )
+          config
+          | client_id: client_id,
+            client_secret: client_secret,
+            register_client: register_client
+        }
+
+      error ->
+        Logger.error("#{__MODULE__}.sso_oidc_register_client errored with #{inspect(error)}")
+        System.halt(-1)
+    end
+  end
+
+  def sso_oidc_start_authorization(%{grant_type: :device_code} = config) do
+    case AWS.SSOOIDC.start_device_authorization(
+           config.client,
+           %{
+             "clientId" => config.client_id,
+             "clientSecret" => config.client_secret,
+             "startUrl" => config.start_url
+           },
+           aws_request_options()
+         ) do
+      {:ok,
+       %{
+         "deviceCode" => device_code,
+         "expiresIn" => expires_in,
+         "interval" => interval,
+         "verificationUriComplete" => verification_uri_complete
+       }, _other} ->
+        %{
+          config
+          | device_code: device_code,
+            expires_in: expires_in,
+            interval: interval,
+            verification_uri_complete: verification_uri_complete
+        }
+
+      error ->
+        Logger.error("#{__MODULE__}.start_device_authorization errored with #{inspect(error)}")
+        System.halt(-1)
+    end
+  end
+
+  def sso_oidc_start_authorization(config) do
+    oidc_config = AwsSsoConfigGenerator.AuthorizationCode.create_oidc_config(config)
+
+    {authorize_url, session_params} =
+      AwsSsoConfigGenerator.AuthorizationCode.authorize_url(oidc_config)
 
     %{
       config
-      | device_code: device_code,
-        expires_in: expires_in,
-        interval: interval,
-        verification_uri_complete: verification_uri_complete
+      | verification_uri_complete: authorize_url,
+        authorization_code_verifier: session_params.code_verifier
     }
   end
 
-  def sso_oidc_create_token(config) do
-    request = %{
+  def sso_oidc_create_token_request(%{grant_type: :authorization_code} = config) do
+    %{
+      "clientId" => config.client_id,
+      "clientSecret" => config.client_secret,
+      "grantType" => "authorization_code",
+      "code" => config.authorization_code,
+      "redirectUri" => config.authorization_redirect_uri,
+      "codeVerifier" => config.authorization_code_verifier,
+      "url" => "https://oidc.#{config.sso_region}.amazonaws.com/token"
+    }
+  end
+
+  def sso_oidc_create_token_request(%{grant_type: _} = config) do
+    %{
       "clientId" => config.client_id,
       "clientSecret" => config.client_secret,
       "grantType" => "urn:ietf:params:oauth:grant-type:device_code",
       "deviceCode" => config.device_code
     }
+  end
+
+  def sso_oidc_create_token(config) do
+    request = sso_oidc_create_token_request(config)
 
     AWS.SSOOIDC.create_token(
       config.client,
