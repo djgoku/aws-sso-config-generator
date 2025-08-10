@@ -52,7 +52,7 @@ aws-sso-config-generator -r us-west-2 --sso-region us-east-1 -u https://<example
 | --template or -t   | string | -t ~/.aws/config.template.json            | JSON template file to re-kap accounts and roles                   | ~/.aws/config.template.json |
 | --out or -o        | string | -o ~/.aws/config.generated                | Output file for generated AWS config file                         | ~/.aws/config.generated     |
 | --sso-session-name | string | --sso-session-name my-sso                 | SSO Session name used in IAM Identity Center config (non-legacy). | my-sso                      |
-
+| --device-code      | N/A    | --device-code                             | Will use the device code XXX-XXX instead of PKCE                  |                             |
 
 ** Example IAM Identity Center Config (~/.aws/config.generated)
 

@@ -12,6 +12,7 @@ defmodule AwsSsoConfigGenerator do
             client_name: "aws-sso-config-generator",
             device_code: nil,
             expires_in: nil,
+            grant_type: :authorization_code,
             iam_identity_center: [],
             interval: nil,
             legacy_iam_identity_center: [],

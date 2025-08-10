@@ -45,7 +45,8 @@ defmodule AwsSsoConfigGenerator.Util do
           template: :string,
           out: :string,
           debug: :boolean,
-          sso_session_name: :string
+          sso_session_name: :string,
+          device_code: :boolean
         ],
         aliases: [r: :region, u: :start_url, h: :help, t: :template, o: :out]
       )
@@ -68,6 +69,13 @@ defmodule AwsSsoConfigGenerator.Util do
         Keyword.get(config.args, :out, Path.join(System.user_home!(), ".aws/config.generated"))
       )
 
+    config =
+      if Keyword.get(config.args, :device_code) do
+        %{config | grant_type: :device_code}
+      else
+        config
+      end
+
     %{config | template_file: template_file, output_file: output_file}
   end
 
@@ -88,6 +96,7 @@ defmodule AwsSsoConfigGenerator.Util do
 
     Options:
 
+    --device-code          - Grant Type of Device Code e.g.: 'urn:ietf:params:oauth:grant-type:device_code'
     --sso-session-name     - AWS SSO Session Name used in IAM Identity Center config (non-legacy)
     --sso-region           - Region where AWS access portal is hosted.
     --region|-r            - Region where AWS resources are hosted.
