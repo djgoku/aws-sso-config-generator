@@ -1,0 +1,66 @@
+[settings]
+experimental = true
+lockfile = true
+
+[tools]
+elixir = "1.18-otp-27"
+elixir-ls = "latest"
+erlang = "27.3.4"
+gh = "latest"
+watchexec = "latest"
+zig = "0.14.0"
+
+[env]
+LANG = "en_US.UTF-8"
+LC_ALL = "en_US.UTF-8"
+ELIXIR_ERL_OPTIONS = "+fnu"
+# Keep Mix and Hex data in the project (Be sure to ignore those directories in `.gitignore`)
+MIX_HOME = "{{config_root}}/.mise-mix"
+HEX_HOME = "{{config_root}}/.mise-hex"
+ERL_AFLAGS = "-kernel shell_history enabled"
+# Put executables from Mix and Hex directories in $PATH
+_.path = [
+  "{{env.MIX_HOME}}/bin",
+  "{{env.MIX_HOME}}/escripts",
+  "{{env.HEX_HOME}}/bin",
+]
+
+[hooks]
+postinstall = "mise run setup"
+
+[tasks.setup]
+run = """
+  mix local.hex --force
+  mix local.rebar --force
+"""
+
+[tasks.escript]
+run = """
+  MIX_ENV=escript mix escript.build
+  """
+
+[tasks.do-all]
+run = """
+mix deps.get --only prod
+mix test
+mix format --check-formatted
+MIX_ENV=prod mix release --overwrite
+  """
+
+[tasks.version-info-only]
+run = '''
+  MIX_APPLICATION_VERSION=$(elixir -e 'Regex.run(~r/version: "(.*)"/, File.read!("mix.exs"), capture: :all_but_first) |> List.first() |> IO.puts()')
+  echo "version $MIX_APPLICATION_VERSION"
+'''
+
+[tasks.version-info]
+run = '''
+MIX_APPLICATION_VERSION=$(elixir -e 'Regex.run(~r/version: "(.*)"/, File.read!("mix.exs"), capture: :all_but_first) |> List.first() |> IO.puts()')
+echo "version '$MIX_APPLICATION_VERSION'"
+  pushd burrito_out
+ bash -c 'for file in *_*; do mv "$file" "${file//_/-}"; done'
+shasum -a 256 ./* > aws-sso-config-generator-checksums.txt
+popd
+# [[ $MIX_APPLICATION_VERSION =~ "-dev" ]] && gh release create ${MIX_APPLICATION_VERSION} --generate-notes -p || gh release create ${MIX_APPLICATION_VERSION} --generate-notes
+# gh release upload ${MIX_APPLICATION_VERSION} ./burrito_out/* -R djgoku/aws-sso-config-generator
+  '''
