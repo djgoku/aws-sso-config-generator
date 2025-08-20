@@ -26,5 +26,5 @@ jobs:
       - name: upload release artifacts
         run: |
           set -x
-          devbox run do-all
-          devbox run version-info
+          devbox run -- mise run do-all
+          mise exec -- elixir version-info.exs
