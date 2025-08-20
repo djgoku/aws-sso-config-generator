@@ -1,0 +1,36 @@
+[tools.elixir]
+version = "1.18-otp-27"
+backend = "core:elixir"
+
+[tools.elixir.platforms.macos-arm64]
+checksum = "blake3:92bc5436a3e88e26aef962b308754d8a2d50ebf67db6e010649c0765e7be4d75"
+size = 7944187
+
+[tools.elixir-ls]
+version = "0.29.2"
+backend = "asdf:elixir-ls"
+
+[tools.erlang]
+version = "27.3.4"
+backend = "core:erlang"
+
+[tools.gh]
+version = "2.62.0"
+backend = "aqua:cli/cli"
+
+[tools.watchexec]
+version = "2.3.2"
+backend = "aqua:watchexec/watchexec"
+
+[tools.watchexec.platforms.macos-arm64]
+checksum = "sha512:88ea43af48597f7dbfceb1783e131d53aabe920c2b253a1538cc4efeee686f01c1282821ddca5dd56cb490fc7105e4e1be2d55e523f873a980b9a19ea157d523"
+size = 2009068
+url = "https://github.com/watchexec/watchexec/releases/download/v2.3.2/watchexec-2.3.2-aarch64-apple-darwin.tar.xz"
+
+[tools.zig]
+version = "0.14.0"
+backend = "core:zig"
+
+[tools.zig.platforms.macos-arm64]
+checksum = "blake3:cdbcf1ae3380861930177a5feb4da9db54e0900f6b5d3cdf990c22e0ce6b23e9"
+size = 45902412
