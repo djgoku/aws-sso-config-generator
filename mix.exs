@@ -4,7 +4,7 @@ defmodule AwsSsoConfigGenerator.MixProject do
   def project do
     [
       app: :aws_sso_config_generator,
-      version: "0.3.1",
+      version: "0.3.2",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -43,11 +43,11 @@ defmodule AwsSsoConfigGenerator.MixProject do
         steps: [:assemble, &Burrito.wrap/1],
         burrito: [
           targets: [
-            macos: [os: :darwin, cpu: :x86_64],
-            macos_m1: [os: :darwin, cpu: :aarch64],
-            linux: [os: :linux, cpu: :x86_64],
-            linux_aarch64: [os: :linux, cpu: :aarch64],
-            windows: [os: :windows, cpu: :x86_64]
+            # macos: [os: :darwin, cpu: :x86_64],
+            macos_m1: [os: :darwin, cpu: :aarch64]
+            # linux: [os: :linux, cpu: :x86_64],
+            # linux_aarch64: [os: :linux, cpu: :aarch64],
+            # windows: [os: :windows, cpu: :x86_64]
           ]
         ]
       ]
