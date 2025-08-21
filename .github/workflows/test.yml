@@ -16,10 +16,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Install devbox with empty devbox.json
-        uses: jetify-com/devbox-install-action@v0.12.0
-        with:
-          enable-cache: 'true'
       - name: build and upload release artifacts
         uses: jdx/mise-action@v2
       - run: |
