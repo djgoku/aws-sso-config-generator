@@ -44,6 +44,7 @@ run = """
 mix deps.get --only prod
 mix test
 mix format --check-formatted
+elixir images/build-images-readme.exs
 MIX_ENV=prod mix release --overwrite
 """
 

@@ -2,16 +2,23 @@ defmodule AwsSsoConfigGenerator do
   require Logger
   alias AwsSsoConfigGenerator.Util
 
+  @dialyzer {:nowarn_function, start: 2, main: 1}
+
   defstruct access_token: nil,
             account_list: [],
             account_roles: [],
             args: [],
+            authorization_code: nil,
+            authorization_code_verifier: nil,
+            authorization_redirect_uri: nil,
+            authorization_server_pid: nil,
             client: nil,
             client_id: nil,
             client_secret: nil,
             client_name: "aws-sso-config-generator",
             device_code: nil,
             expires_in: nil,
+            grant_type: :authorization_code,
             iam_identity_center: [],
             interval: nil,
             legacy_iam_identity_center: [],
@@ -44,26 +51,33 @@ defmodule AwsSsoConfigGenerator do
       |> Util.get_region()
       |> Util.get_start_url()
       |> Util.get_sso_session_name()
+      |> AwsSsoConfigGenerator.AuthorizationCode.maybe_start_authorization_code()
       |> Util.sso_oidc_register_client()
-      |> Util.sso_oidc_start_device_authorization()
+      |> Util.sso_oidc_start_authorization()
 
-    output = """
-    aws-sso-config-generator #{Application.spec(:aws_sso_config_generator, :vsn)}
-
-    Tool to generate an AWS config file (~/.aws/config) after authenticating and authorizing AWS SSO IAM Identity Center.
-
-    Source code: https://github.com/djgoku/aws-sso-config-generator
-
-    Verification URI (copy and paste into browser if it doesn't open.)
-
-      #{config.verification_uri_complete}
-    """
-
+    output = Util.console_output(config.verification_uri_complete)
     IO.puts(output)
 
     Util.browser_open(config.verification_uri_complete)
 
-    maybe_access_token = Util.request_until(config, config.expires_in)
+    maybe_access_token =
+      if config.grant_type == :device_code do
+        Util.request_until(config, config.expires_in)
+      else
+        # :authorization_code we need to way for a message from
+        # AwsSsoConfigGenerator.AuthorizationCode.Http that the
+        # callback was called
+        receive do
+          :shutdown ->
+            Logger.debug("Shutdown message received. Stopping server")
+        end
+
+        Process.exit(config.authorization_server_pid, :normal)
+
+        code = AwsSsoConfigGenerator.AuthorizationCode.Agent.get()
+        config = %{config | authorization_code: code}
+        Util.request_until(config, 30)
+      end
 
     if is_nil(maybe_access_token) do
       Logger.error("Unable to create token")

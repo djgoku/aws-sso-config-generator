@@ -4,7 +4,7 @@ defmodule AwsSsoConfigGenerator.MixProject do
   def project do
     [
       app: :aws_sso_config_generator,
-      version: "0.3.2",
+      version: "0.4.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -29,11 +29,14 @@ defmodule AwsSsoConfigGenerator.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:assent, "~> 0.3"},
       {:burrito, "~> 1.0"},
       # {:aws, "~> 1.0.0", path: "./deps/aws"},
       {:aws, "~> 1.0.0"},
       {:hackney, "~> 1.18"},
-      {:prompt, "~> 0.10.0"}
+      {:prompt, "~> 0.10.0"},
+      {:plug, "~> 1.15"},
+      {:bandit, "~> 1.4"}
     ]
   end
 

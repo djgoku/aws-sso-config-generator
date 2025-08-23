@@ -4,6 +4,8 @@
 
 Tool to generate an AWS config file (~​~/.aws/config~) (our file is saved to ~​~/.aws/config.generated~) after authenticating and authorizing AWS SSO IAM Identity Center.
 
+#+caption: aws-sso-config-generator demo with pkce
+[[file:images/aws-sso-config-generator-pkce.gif]]
 ** Downloads
 
 Available downloads for macOS (x86 and m series), linux (x86 and arm64) and windows.
@@ -52,7 +54,7 @@ aws-sso-config-generator -r us-west-2 --sso-region us-east-1 -u https://<example
 | --template or -t   | string | -t ~/.aws/config.template.json            | JSON template file to re-kap accounts and roles                   | ~/.aws/config.template.json |
 | --out or -o        | string | -o ~/.aws/config.generated                | Output file for generated AWS config file                         | ~/.aws/config.generated     |
 | --sso-session-name | string | --sso-session-name my-sso                 | SSO Session name used in IAM Identity Center config (non-legacy). | my-sso                      |
-
+| --device-code      | N/A    | --device-code                             | Will use the device code XXX-XXX instead of PKCE                  |                             |
 
 ** Example IAM Identity Center Config (~/.aws/config.generated)
 
@@ -148,6 +150,16 @@ In the =template.json= structure, the values under the =accounts= and =roles= ke
 1. Clone repository
 2. ~devbox run do-all~
 
+
+** PKCE and Device Code Process diagrams for AWS CLI and ~aws-sso-config-generator~
+
+| Method                                   | Mermaid Diagram                                                        |
+|------------------------------------------+------------------------------------------------------------------------|
+| PKCE via aws-sso-config-generator        | [[file:images/aws-sso-config-generator-authorization-code-pkce-flow.md]]   |
+| PKCE via aws cli                         | [[file:images/aws-sso-auth-code-pkce-flow.md]]                             |
+| Device Code via aws-sso-config-generator | [[file:images/aws-sso-config-generator-device-code-flow.md]]               |
+| Device Code via aws cli                  | [[file:images/aws-sso-device-code-flow.md]]                                |
+
 ** FAQ
 
 *** Why am I seeing an old version of an aws-sso-config-generator?
@@ -175,5 +187,10 @@ We are using [[https://github.com/burrito-elixir/burrito][burrito]] which packag
 
 *** Other
 - https://github.com/jetify-com/devbox
-- https://stackoverflow.com/a/71850591
+- https://stackoverflow.com/a/71850591 - Process for ~aws-sso-config-generator~ and any others to build tooling like this.
+
+*** AWS
+- https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html
 - https://docs.aws.amazon.com/singlesignon/latest/OIDCAPIReference/Welcome.html
+- https://aws.amazon.com/blogs/developer/aws-cli-adds-pkce-based-authorization-for-sso/ - Announcement of AWS CLI adding PKCE
+- https://github.com/aws/aws-cli/commit/130005af5ea6a75705ed528aaf06d533f449bef9 - Implementing PKCE in AWS CLI
