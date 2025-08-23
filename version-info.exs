@@ -22,7 +22,7 @@ if System.get_env("CI") do
     System.shell("gh release create #{version} --generate-notes -p")
   else
     Logger.info("creating github release")
-    System.shell("gh release create #{version} --generate-notes")
+    System.shell("gh release create #{version} -F release-notes/#{version}.md")
   end
 
   Logger.info("uploading artifacts")
