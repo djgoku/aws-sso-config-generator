@@ -292,10 +292,12 @@ defmodule AwsSsoConfigGenerator.Util do
            aws_request_options()
          ) do
       {:ok, %{"accountList" => account_list, "nextToken" => next_token}, _} ->
+        updated_config = %{config | account_list: config.account_list ++ account_list}
+
         if is_nil(next_token) do
-          %{config | account_list: config.account_list ++ account_list}
+          updated_config
         else
-          sso_list_accounts(config, next_token)
+          sso_list_accounts(updated_config, next_token)
         end
     end
   end
