@@ -1,6 +1,7 @@
 env:
   MISE_EXPERIMENTAL: "true"
   MISE_DATA_DIR: /tmp/cirrus-ci-build/.mise
+  MISE_IGNORED_CONFIG_PATHS: /mise/config.toml
 
 test_task:
   auto_cancellation: $CIRRUS_BRANCH != 'main'
