@@ -4,11 +4,7 @@ lockfile = true
 
 [tools]
 elixir = "1.18-otp-27"
-elixir-ls = "latest"
 erlang = "27.3.4"
-gh = "latest"
-watchexec = "latest"
-zig = "0.14.0"
 
 [env]
 LANG = "en_US.UTF-8"
@@ -40,6 +36,7 @@ MIX_ENV=escript mix escript.build
 """
 
 [tasks.do-all]
+tools = { elixir = "1.18-otp-27", erlang = "27.3.4", zig = "0.14.0" }
 run = """
 mix deps.get --only prod
 mix test
@@ -49,6 +46,7 @@ MIX_ENV=prod mix release --overwrite
 """
 
 [tasks.test]
+tools = { elixir = "1.18-otp-27", erlang = "27.3.4" }
 run = """
 mix deps.get
 mix test

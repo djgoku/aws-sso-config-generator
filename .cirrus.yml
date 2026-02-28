@@ -3,7 +3,6 @@ env:
 
 test_task:
   auto_cancellation: $CIRRUS_BRANCH != 'main'
-  timeout_in: 10m
   container:
     image: ghcr.io/jdx/mise:latest
   mise_cache:
