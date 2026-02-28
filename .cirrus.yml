@@ -1,5 +1,6 @@
 env:
   MISE_EXPERIMENTAL: "true"
+  MISE_DATA_DIR: /tmp/cirrus-ci-build/.mise
 
 test_task:
   auto_cancellation: $CIRRUS_BRANCH != 'main'
@@ -9,6 +10,18 @@ test_task:
     folder: .mise
     fingerprint_script: cat mise.toml mise.lock
     populate_script: mise install
+  hex_cache:
+    folder: .mise-hex
+    fingerprint_script: cat mise.toml
+  mix_home_cache:
+    folder: .mise-mix
+    fingerprint_script: cat mise.toml
+  deps_cache:
+    folder: deps
+    fingerprint_script: cat mix.lock
+  build_cache:
+    folder: _build
+    fingerprint_script: cat mix.lock
   test_script:
     - mise run test
 
@@ -24,6 +37,18 @@ release_task:
     folder: .mise
     fingerprint_script: cat mise.toml mise.lock
     populate_script: mise install
+  hex_cache:
+    folder: .mise-hex
+    fingerprint_script: cat mise.toml
+  mix_home_cache:
+    folder: .mise-mix
+    fingerprint_script: cat mise.toml
+  deps_cache:
+    folder: deps
+    fingerprint_script: cat mix.lock
+  build_cache:
+    folder: _build
+    fingerprint_script: cat mix.lock
   release_script:
     - mise run do-all
     - mise exec -- elixir version-info.exs
