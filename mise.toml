@@ -5,6 +5,7 @@ lockfile = true
 [tools]
 elixir = "1.18-otp-27"
 erlang = "27.3.4"
+zig = "0.15.2"
 
 [env]
 LANG = "en_US.UTF-8"
