@@ -1,0 +1,85 @@
+/// Source for main.yml — regenerate with `mise run gen-workflows`.
+amends "@com.github.actions/Workflow.pkl"
+
+name = "release"
+
+on {
+  workflow_dispatch = new {}
+  push = new {
+    tags { "*" }
+    branches { "main" }
+  }
+}
+
+concurrency {
+  group = "\(module.context.github.workflow)-\(module.context.github.ref)"
+  `cancel-in-progress` = true
+}
+
+env {
+  ["MISE_EXPERIMENTAL"] = "true"
+  ["GH_TOKEN"] = "${{ secrets.GH_TOKEN }}"
+}
+
+local miseSetupSteps = new Listing<Step> {
+  new {
+    uses = "actions/checkout@v4"
+  }
+  // install: false because mise-action auto-adds --locked when mise.lock
+  // exists, and tools without a precompiled URL (elixir-ls) abort it;
+  // the plain `mise install` below reads the lock where URLs exist.
+  new {
+    uses = "jdx/mise-action@v4"
+    with {
+      ["version"] = "2026.8.5"
+      ["install"] = false
+    }
+  }
+  new {
+    run = "mise install"
+  }
+}
+
+jobs {
+  // Builds the linux target with the mise-installed OTP as Burrito's ERTS
+  // (no CDN download) and cross-builds windows with Burrito's downloaded
+  // ERTS, then creates the GitHub release and uploads both artifacts.
+  ["release-linux"] {
+    `runs-on` = "ubuntu-latest"
+    `timeout-minutes` = 30
+    steps {
+      ...miseSetupSteps
+      new {
+        run = """
+          mise run deps-prod
+          mise exec -- elixir images/build-images-readme.exs
+          BURRITO_TARGET=linux mise run release
+          BURRITO_TARGET=windows mise run release
+          mise exec -- elixir version-info.exs
+          """
+      }
+    }
+  }
+
+  // Builds the macos_m1 target natively on an arm64 runner so Burrito
+  // reuses the mise-installed OTP instead of downloading the universal CDN
+  // ERTS. Runs after release-linux so the GitHub release already exists
+  // and this job only uploads its artifact.
+  ["release-macos"] {
+    `runs-on` = "macos-latest"
+    `timeout-minutes` = 30
+    needs {
+      "release-linux"
+    }
+    steps {
+      ...miseSetupSteps
+      new {
+        run = """
+          mise run deps-prod
+          BURRITO_TARGET=macos_m1 mise run release
+          mise exec -- elixir version-info.exs
+          """
+      }
+    }
+  }
+}

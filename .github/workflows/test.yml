@@ -1,22 +1,22 @@
-on:
-  workflow_dispatch:
-  push:
-
+# Generated from Workflow.pkl. DO NOT EDIT.
+name: test
+'on':
+  push: {}
+  workflow_dispatch: {}
+env:
+  MISE_EXPERIMENTAL: 'true'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
-env:
-  MISE_EXPERIMENTAL: true
-  DEVBOX_API_TOKEN: ${{ secrets.DEVBOX_API_TOKEN }}
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}
 jobs:
-  release:
+  test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - name: build and upload release artifacts
-        uses: jdx/mise-action@v2
-      - run: |
-          mise run test
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+    - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4
+      with:
+        version: 2026.8.5
+        install: false
+    - run: mise install
+    - run: mise run test
