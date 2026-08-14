@@ -32,7 +32,6 @@ defmodule AwsSsoConfigGenerator.MixProject do
       # {:nimble_options, "~> 1.0"},
       # {:nimble_options, "~> 1.0", [env: :dev, path: "/Users/dj_goku/dev/github/djgoku/nimble_options", override: true]},
       # {:timex, "~> 3.0"},
-      {:igniter, "~> 0.6", only: [:dev, :test]},
       {:assent, "~> 0.3"},
       {:burrito, "~> 1.6"},
       # {:aws, "~> 1.0.0", path: "./deps/aws"},
