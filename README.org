@@ -154,6 +154,12 @@ In the =template.json= structure, the values under the =accounts= and =roles= ke
 Other tasks:
 
 - ~mise run do-all~ - full local release build (all Burrito targets)
+
+*Note (testing Burrito builds):* the wrapper extracts its payload to
+~~/Library/Application Support/.burrito/<app>_erts-<erts>_<version>~ and reuses
+it on every launch. A rebuilt binary at the same version will keep running the
+*old* extracted payload - run ~./burrito_out/<binary> maintenance uninstall~
+before re-testing a rebuild.
 - ~mise run escript~ - build the escript variant
 - ~mise run gen-workflows~ - regenerate GitHub Actions YAML from the Pkl sources
 - ~mise run version-info-only~ - print the current mix.exs version
