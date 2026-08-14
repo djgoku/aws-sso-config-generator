@@ -3,12 +3,18 @@ experimental = true
 lockfile = true
 
 [tools]
-elixir = "1.18-otp-27"
+"aqua:elixir-lang/expert" = "latest"
+"aqua:ip7z/7zip" = "latest"
+elixir = "1.20.3"
 elixir-ls = "latest"
-erlang = "27.3.4"
+erlang = "29"
 gh = "latest"
+hk = "latest"
+# node = "22"
+pkl = "latest"
+python = "3.14"
 watchexec = "latest"
-zig = "0.14.0"
+zig = "0.16.0"
 
 [env]
 LANG = "en_US.UTF-8"
@@ -23,10 +29,20 @@ _.path = [
   "{{env.MIX_HOME}}/bin",
   "{{env.MIX_HOME}}/escripts",
   "{{env.HEX_HOME}}/bin",
+  "./node_modules/.bin",
 ]
 
 [hooks]
-postinstall = "mise run setup"
+postinstall = [
+  "mise run setup",
+  "command -v npx >/dev/null 2>&1 && npx corepack enable || true",
+]
+
+[tasks.pnpm-install]
+description = 'Installs dependencies with pnpm'
+run = 'pnpm install yaml-language-server'
+sources = ['package.json', 'pnpm-lock.yaml', 'mise.toml']
+outputs = ['node_modules/.pnpm/lock.yaml']
 
 [tasks.setup]
 run = """
@@ -39,16 +55,33 @@ run = """
 MIX_ENV=escript mix escript.build
 """
 
+[tasks.gen-workflows]
+description = 'Regenerates GitHub Actions YAML (SHA-pinned via DependabotManagedActions) from the Pkl sources'
+run = "pkl eval --project-dir .github/ -m .github/ .github/index.pkl"
+sources = ['.github/index.pkl', '.github/workflows/*.pkl', '.github/PklProject*']
+outputs = [
+  '.github/workflows/test.yml',
+  '.github/workflows/main.yml',
+  '.github/workflows/__lockfile__.yml',
+  '.github/dependabot.yml',
+]
+
+[tasks.deps-prod]
+run = "mix deps.get --only prod"
+
+[tasks.release]
+description = 'Builds the Burrito release; set BURRITO_TARGET to build a single target'
+run = "MIX_ENV=prod mix release --overwrite"
+
 [tasks.do-all]
 run = """
 mix deps.get --only prod
-mix test
-mix format --check-formatted
 elixir images/build-images-readme.exs
 MIX_ENV=prod mix release --overwrite
 """
 
 [tasks.test]
+# maybe add a test to make sure a release-notes/ was added
 run = """
 mix deps.get
 mix test
@@ -59,4 +92,24 @@ mix format --check-formatted
 run = """
 MIX_APPLICATION_VERSION=$(elixir -e 'Regex.run(~r/version: "(.*)"/, File.read!("mix.exs"), capture: :all_but_first) |> List.first() |> IO.puts()')
 echo "version $MIX_APPLICATION_VERSION"
+"""
+
+[tasks.burrito-custom-erts]
+description = 'Creates a custom ERTS tarball for Burrito from the mise-installed Erlang'
+run = """
+ERTS_DIR=$(mise where erlang)
+OTP_VERSION=$(basename "$ERTS_DIR")
+WRAPPER_NAME="otp_universal_apple_darwin_${OTP_VERSION}"
+STAGING=$(mktemp -d)
+
+ln -s "$ERTS_DIR" "$STAGING/$WRAPPER_NAME"
+tar czf "mise-otp-${OTP_VERSION}.tar.gz" -h -C "$STAGING" "$WRAPPER_NAME"
+rm -rf "$STAGING"
+
+echo "Created mise-otp-${OTP_VERSION}.tar.gz"
+"""
+
+[tasks.pre-push]
+run = """
+/Users/dj_goku/dev/github/djgoku/git-pre-push/escript-only/git_pre_push
 """
