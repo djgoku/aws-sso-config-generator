@@ -40,8 +40,7 @@ defmodule AwsSsoConfigGenerator.MixProject do
       {:hackney, "~> 4.5"},
       {:prompt, "~> 0.10.0"},
       {:plug, "~> 1.15"},
-      {:bandit, "~> 1.4"},
-      {:aws_credentials, "~> 1.1"}
+      {:bandit, "~> 1.4"}
     ]
   end
 
