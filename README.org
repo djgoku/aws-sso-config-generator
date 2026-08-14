@@ -10,6 +10,47 @@ Tool to generate an AWS config file (~​~/.aws/config~) (our file is saved to ~
 
 Available downloads for macOS (x86 and m series), linux (x86 and arm64) and windows.
 
+*** Install with mise or aqua
+
+This repository ships an [[https://aquaproj.github.io/][aqua]] registry at its root
+(=registry.yaml=). Until the package is merged into the official
+[[https://github.com/aquaproj/aqua-registry][aqua-registry]], you can install
+directly from this repo's registry by pointing mise or aqua at it. Both tools
+download the release binary for your OS/arch and verify it against the
+release's =aws-sso-config-generator-checksums.txt=.
+
+With [[https://mise.jdx.dev/][mise]] (set the registry via the
+=MISE_AQUA_REGISTRIES= env var, or persist it under =[settings]= /
+=aqua.registries= in your config):
+
+#+begin_example
+MISE_AQUA_REGISTRIES=https://github.com/djgoku/aws-sso-config-generator \
+  mise use -g "aqua:djgoku/aws-sso-config-generator@latest"
+
+# or pin a specific version
+MISE_AQUA_REGISTRIES=https://github.com/djgoku/aws-sso-config-generator \
+  mise use -g "aqua:djgoku/aws-sso-config-generator@0.4.1"
+#+end_example
+
+With [[https://aquaproj.github.io/][aqua]] directly, add the registry and
+package to your =aqua.yaml=:
+
+#+begin_example
+registries:
+  - name: djgoku
+    type: github_content
+    repo_owner: djgoku
+    repo_name: aws-sso-config-generator
+    ref: main            # a tag/commit is safer than a branch
+    path: registry.yaml
+packages:
+  - name: djgoku/aws-sso-config-generator@0.4.1
+    registry: djgoku
+#+end_example
+
+Then run =aqua install=. (Both remote forms resolve the file from the default
+branch, so they work once =registry.yaml= is present there.)
+
 *** macOS
 
 On macOS you will get a popup if you run without doing the below.
