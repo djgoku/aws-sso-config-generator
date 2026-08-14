@@ -9,12 +9,11 @@ elixir = "1.20.3"
 elixir-ls = "latest"
 erlang = "29"
 gh = "latest"
-hk = "latest"
-# node = "22"
 pkl = "latest"
 python = "3.14"
 watchexec = "latest"
 zig = "0.16.0"
+"conda:xz-tools" = "latest"
 
 [env]
 LANG = "en_US.UTF-8"
@@ -29,20 +28,10 @@ _.path = [
   "{{env.MIX_HOME}}/bin",
   "{{env.MIX_HOME}}/escripts",
   "{{env.HEX_HOME}}/bin",
-  "./node_modules/.bin",
 ]
 
 [hooks]
-postinstall = [
-  "mise run setup",
-  "command -v npx >/dev/null 2>&1 && npx corepack enable || true",
-]
-
-[tasks.pnpm-install]
-description = 'Installs dependencies with pnpm'
-run = 'pnpm install yaml-language-server'
-sources = ['package.json', 'pnpm-lock.yaml', 'mise.toml']
-outputs = ['node_modules/.pnpm/lock.yaml']
+postinstall = ["mise run setup"]
 
 [tasks.setup]
 run = """
@@ -92,24 +81,4 @@ mix format --check-formatted
 run = """
 MIX_APPLICATION_VERSION=$(elixir -e 'Regex.run(~r/version: "(.*)"/, File.read!("mix.exs"), capture: :all_but_first) |> List.first() |> IO.puts()')
 echo "version $MIX_APPLICATION_VERSION"
-"""
-
-[tasks.burrito-custom-erts]
-description = 'Creates a custom ERTS tarball for Burrito from the mise-installed Erlang'
-run = """
-ERTS_DIR=$(mise where erlang)
-OTP_VERSION=$(basename "$ERTS_DIR")
-WRAPPER_NAME="otp_universal_apple_darwin_${OTP_VERSION}"
-STAGING=$(mktemp -d)
-
-ln -s "$ERTS_DIR" "$STAGING/$WRAPPER_NAME"
-tar czf "mise-otp-${OTP_VERSION}.tar.gz" -h -C "$STAGING" "$WRAPPER_NAME"
-rm -rf "$STAGING"
-
-echo "Created mise-otp-${OTP_VERSION}.tar.gz"
-"""
-
-[tasks.pre-push]
-run = """
-/Users/dj_goku/dev/github/djgoku/git-pre-push/escript-only/git_pre_push
 """

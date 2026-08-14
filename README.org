@@ -148,7 +148,15 @@ In the =template.json= structure, the values under the =accounts= and =roles= ke
 ** Development
 
 1. Clone repository
-2. ~devbox run do-all~
+2. ~mise install~ (installs the toolchain, hex/rebar, and node deps via hooks)
+3. ~mise run test~ - fetch deps, run tests, check formatting
+
+Other tasks:
+
+- ~mise run do-all~ - full local release build (all Burrito targets)
+- ~mise run escript~ - build the escript variant
+- ~mise run gen-workflows~ - regenerate GitHub Actions YAML from the Pkl sources
+- ~mise run version-info-only~ - print the current mix.exs version
 
 
 ** PKCE and Device Code Process diagrams for AWS CLI and ~aws-sso-config-generator~
