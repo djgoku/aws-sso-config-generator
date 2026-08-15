@@ -70,7 +70,8 @@ MIX_ENV=prod mix release --overwrite
 """
 
 [tasks.test]
-# maybe add a test to make sure a release-notes/ was added
+# TODO: fail if release-notes/<version>.md is missing — version-info.exs
+# requires it to create a non -dev GitHub release.
 run = """
 mix deps.get
 mix test

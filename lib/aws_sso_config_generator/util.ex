@@ -356,7 +356,7 @@ defmodule AwsSsoConfigGenerator.Util do
           :template_file
         ])
 
-      File.write!(debug_file, inspect(config), limit: :infinity, printable_limit: :infinity)
+      File.write!(debug_file, inspect(config, limit: :infinity, printable_limit: :infinity))
     end
 
     config
