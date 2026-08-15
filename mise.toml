@@ -2,16 +2,15 @@
 experimental = true
 lockfile = true
 
+# Shared toolchain used by CI and local development. Local-only dev tools
+# (elixir-ls, expert, watchexec, pkl, python) live in mise.local.toml so CI
+# installs a minimal set and mise-action's --locked doesn't choke on the
+# URL-less elixir-ls (asdf backend).
 [tools]
-"aqua:elixir-lang/expert" = "latest"
 "aqua:ip7z/7zip" = "latest"
 elixir = "1.20.3"
-elixir-ls = "latest"
 erlang = "29"
 gh = "latest"
-pkl = "latest"
-python = "3.14"
-watchexec = "latest"
 zig = "0.16.0"
 "conda:xz-tools" = "latest"
 

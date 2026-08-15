@@ -32,3 +32,4 @@ notes.org
 /.mise-hex/
 /.mise-mix/
 /.nix-hex/
+mise.local.toml

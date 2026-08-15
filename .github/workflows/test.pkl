@@ -19,21 +19,32 @@ env {
 
 jobs {
   ["test"] {
-    `runs-on` = "ubuntu-latest"
+    `runs-on` = "ubuntu-24.04-arm"
     `timeout-minutes` = 10
     steps {
       new {
-        uses = "actions/checkout@v4"
+        uses = "actions/checkout@v7"
       }
-      // install: false because mise-action auto-adds --locked when mise.lock
-      // exists, and tools without a lockfile URL (elixir-ls, asdf backend)
-      // abort it; the plain `mise install` below is non-strict: it uses locked
-      // URLs where present and installs the URL-less tools normally.
+      // install: false — mise-action auto-adds --locked when mise.lock exists,
+      // and the lock lacks linux-x64 (glibc) URLs for erlang and conda:xz-tools,
+      // so a strict install aborts. cache: false because mise-action saves no
+      // cache with install: false, so we cache the mise data dir explicitly.
       new {
         uses = "jdx/mise-action@v4"
         with {
           ["version"] = "2026.8.5"
           ["install"] = false
+          ["cache"] = false
+        }
+      }
+      new {
+        uses = "actions/cache@v6"
+        with {
+          // runner.arch is in the key because runner.os is "Linux" for both
+          // x64 and arm64 runners; without it the two would share a key.
+          ["path"] = "~/.local/share/mise"
+          ["key"] = "mise-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('mise.lock') }}"
+          ["restore-keys"] = "mise-${{ runner.os }}-${{ runner.arch }}-"
         }
       }
       new {
