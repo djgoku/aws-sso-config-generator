@@ -291,14 +291,23 @@ defmodule AwsSsoConfigGenerator.Util do
            config.access_token,
            aws_request_options()
          ) do
-      {:ok, %{"accountList" => account_list, "nextToken" => next_token}, _} ->
+      {:ok, %{"accountList" => account_list} = response, _} ->
         updated_config = %{config | account_list: config.account_list ++ account_list}
 
-        if is_nil(next_token) do
-          updated_config
-        else
-          sso_list_accounts(updated_config, next_token)
+        case Map.get(response, "nextToken") do
+          nil -> updated_config
+          next_token -> sso_list_accounts(updated_config, next_token)
         end
+
+      {:error, {:unexpected_response, %{status_code: status_code, body: body}}} ->
+        Logger.error("sso_list_accounts failed: HTTP #{status_code} - #{body}")
+
+        System.halt(1)
+
+      error ->
+        Logger.error("sso_list_accounts failed: #{inspect(error)}")
+
+        System.halt(1)
     end
   end
 
