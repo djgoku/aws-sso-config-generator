@@ -28,6 +28,7 @@ jobs:
         mise run deps-prod
         mise exec -- elixir images/build-images-readme.exs
         BURRITO_TARGET=linux mise run release
+        BURRITO_TARGET=linux_aarch64 mise run release
         BURRITO_TARGET=windows mise run release
     - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
@@ -47,6 +48,7 @@ jobs:
     - run: |-
         mise run deps-prod
         BURRITO_TARGET=macos_m1 mise run release
+        BURRITO_TARGET=macos mise run release
     - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: burrito-macos

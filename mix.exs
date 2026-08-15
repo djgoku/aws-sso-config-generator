@@ -50,6 +50,10 @@ defmodule AwsSsoConfigGenerator.MixProject do
         burrito: [
           targets: [
             linux: [os: :linux, cpu: :x86_64] ++ host_custom_erts(:linux, :x86_64),
+            linux_aarch64: [os: :linux, cpu: :aarch64] ++ host_custom_erts(:linux, :aarch64),
+            # macos (Intel/x86_64) is deprecated and will stop being built in a
+            # future release; Apple has moved to Apple Silicon (macos_m1).
+            macos: [os: :darwin, cpu: :x86_64] ++ host_custom_erts(:darwin, :x86_64),
             macos_m1: [os: :darwin, cpu: :aarch64] ++ host_custom_erts(:darwin, :aarch64),
             windows: [os: :windows, cpu: :x86_64]
           ]
@@ -67,6 +71,7 @@ defmodule AwsSsoConfigGenerator.MixProject do
         {:unix, :darwin} -> :darwin
         {:unix, :linux} -> :linux
         {:win32, _} -> :windows
+        _ -> :unknown
       end
 
     host_cpu =

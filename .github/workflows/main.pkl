@@ -42,10 +42,10 @@ local miseSetupSteps = new Listing<Step> {
 }
 
 jobs {
-  // Builds the linux target with the mise-installed OTP as Burrito's ERTS
-  // (no CDN download) and cross-builds windows with Burrito's downloaded
-  // ERTS. Uploads the raw burrito_out binaries as an artifact; the release
-  // job below renames + checksums them together with the macOS build.
+  // Builds linux (x86_64) with the mise-installed OTP as Burrito's ERTS
+  // (no CDN download) and cross-builds linux_aarch64 and windows with
+  // Burrito's downloaded ERTS. Uploads the raw burrito_out binaries as an
+  // artifact; the release job renames + checksums them with the macOS builds.
   ["build-linux"] {
     `runs-on` = "ubuntu-latest"
     `timeout-minutes` = 30
@@ -56,6 +56,7 @@ jobs {
           mise run deps-prod
           mise exec -- elixir images/build-images-readme.exs
           BURRITO_TARGET=linux mise run release
+          BURRITO_TARGET=linux_aarch64 mise run release
           BURRITO_TARGET=windows mise run release
           """
       }
@@ -70,9 +71,10 @@ jobs {
     }
   }
 
-  // Builds the macos_m1 target natively on an arm64 runner so Burrito
-  // reuses the mise-installed OTP instead of downloading the universal CDN
-  // ERTS. Uploads its raw burrito_out binary as an artifact.
+  // Builds macos_m1 natively on an arm64 runner so Burrito reuses the
+  // mise-installed OTP instead of downloading the universal CDN ERTS, and
+  // cross-builds macos (Intel/x86_64, deprecated) with the CDN ERTS.
+  // Uploads the raw burrito_out binaries as an artifact.
   ["build-macos"] {
     `runs-on` = "macos-latest"
     `timeout-minutes` = 30
@@ -82,6 +84,7 @@ jobs {
         run = """
           mise run deps-prod
           BURRITO_TARGET=macos_m1 mise run release
+          BURRITO_TARGET=macos mise run release
           """
       }
       new {
