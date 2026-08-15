@@ -14,7 +14,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  release-linux:
+  build-linux:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -29,10 +29,12 @@ jobs:
         mise exec -- elixir images/build-images-readme.exs
         BURRITO_TARGET=linux mise run release
         BURRITO_TARGET=windows mise run release
-        mise exec -- elixir version-info.exs
-  release-macos:
-    needs:
-    - release-linux
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: burrito-linux
+        path: burrito_out/
+        if-no-files-found: error
+  build-macos:
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
@@ -45,4 +47,27 @@ jobs:
     - run: |-
         mise run deps-prod
         BURRITO_TARGET=macos_m1 mise run release
-        mise exec -- elixir version-info.exs
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: burrito-macos
+        path: burrito_out/
+        if-no-files-found: error
+  release:
+    needs:
+    - build-linux
+    - build-macos
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+    - uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4
+      with:
+        version: 2026.8.5
+        install: false
+    - run: mise install
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      with:
+        path: burrito_out
+        pattern: burrito-*
+        merge-multiple: true
+    - run: mise exec -- elixir version-info.exs

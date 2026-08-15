@@ -43,8 +43,9 @@ local miseSetupSteps = new Listing<Step> {
 jobs {
   // Builds the linux target with the mise-installed OTP as Burrito's ERTS
   // (no CDN download) and cross-builds windows with Burrito's downloaded
-  // ERTS, then creates the GitHub release and uploads both artifacts.
-  ["release-linux"] {
+  // ERTS. Uploads the raw burrito_out binaries as an artifact; the release
+  // job below renames + checksums them together with the macOS build.
+  ["build-linux"] {
     `runs-on` = "ubuntu-latest"
     `timeout-minutes` = 30
     steps {
@@ -55,30 +56,68 @@ jobs {
           mise exec -- elixir images/build-images-readme.exs
           BURRITO_TARGET=linux mise run release
           BURRITO_TARGET=windows mise run release
-          mise exec -- elixir version-info.exs
           """
+      }
+      new {
+        uses = "actions/upload-artifact@v4"
+        with {
+          ["name"] = "burrito-linux"
+          ["path"] = "burrito_out/"
+          ["if-no-files-found"] = "error"
+        }
       }
     }
   }
 
   // Builds the macos_m1 target natively on an arm64 runner so Burrito
   // reuses the mise-installed OTP instead of downloading the universal CDN
-  // ERTS. Runs after release-linux so the GitHub release already exists
-  // and this job only uploads its artifact.
-  ["release-macos"] {
+  // ERTS. Uploads its raw burrito_out binary as an artifact.
+  ["build-macos"] {
     `runs-on` = "macos-latest"
     `timeout-minutes` = 30
-    needs {
-      "release-linux"
-    }
     steps {
       ...miseSetupSteps
       new {
         run = """
           mise run deps-prod
           BURRITO_TARGET=macos_m1 mise run release
-          mise exec -- elixir version-info.exs
           """
+      }
+      new {
+        uses = "actions/upload-artifact@v4"
+        with {
+          ["name"] = "burrito-macos"
+          ["path"] = "burrito_out/"
+          ["if-no-files-found"] = "error"
+        }
+      }
+    }
+  }
+
+  // Single releasing job: downloads all target binaries into one burrito_out/
+  // so version-info.exs renames them, generates one checksums.txt covering
+  // every platform, creates the GitHub release, and uploads all artifacts.
+  ["release"] {
+    `runs-on` = "ubuntu-latest"
+    `timeout-minutes` = 15
+    needs {
+      "build-linux"
+      "build-macos"
+    }
+    steps {
+      ...miseSetupSteps
+      // merge-multiple flattens burrito-linux/ and burrito-macos/ into a
+      // single burrito_out/ (no per-artifact subdirectories).
+      new {
+        uses = "actions/download-artifact@v4"
+        with {
+          ["path"] = "burrito_out"
+          ["pattern"] = "burrito-*"
+          ["merge-multiple"] = true
+        }
+      }
+      new {
+        run = "mise exec -- elixir version-info.exs"
       }
     }
   }

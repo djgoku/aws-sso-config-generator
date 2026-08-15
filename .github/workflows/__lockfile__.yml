@@ -17,5 +17,9 @@ jobs:
     steps:
     - name: actions/checkout@v4
       uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+    - name: actions/download-artifact@v4
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+    - name: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
     - name: jdx/mise-action@v4
       uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4
