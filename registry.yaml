@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/aquaproj/aqua/main/json-schema/registry.json
+packages:
+  - type: github_release
+    repo_owner: djgoku
+    repo_name: aws-sso-config-generator
+    description: Generate an AWS config file (~/.aws/config) after authenticating and authorizing AWS SSO IAM Identity Center
+    asset: aws-sso-config-generator-{{.OS}}
+    format: raw
+    supported_envs:
+      - linux
+      - darwin
+      - windows/amd64
+    replacements:
+      darwin: macos
+    overrides:
+      - goos: linux
+        goarch: arm64
+        asset: aws-sso-config-generator-{{.OS}}-{{.Arch}}
+        replacements:
+          arm64: aarch64
+      - goos: darwin
+        goarch: arm64
+        asset: aws-sso-config-generator-macos-m1
+      - goos: windows
+        asset: aws-sso-config-generator-windows.exe
+    checksum:
+      type: github_release
+      asset: aws-sso-config-generator-checksums.txt
+      algorithm: sha256

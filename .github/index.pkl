@@ -1,0 +1,8 @@
+/// Renders the GitHub Actions workflows with action versions pinned to git
+/// SHAs (kept up to date by Dependabot). Regenerate with `mise run gen-workflows`.
+amends "@pkl.github.dependabotManagedActions/DependabotManagedActions.pkl"
+
+workflows {
+  ["workflows/test.yml"] = import("workflows/test.pkl")
+  ["workflows/main.yml"] = import("workflows/main.pkl")
+}

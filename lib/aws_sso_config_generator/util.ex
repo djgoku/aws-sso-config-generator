@@ -204,7 +204,7 @@ defmodule AwsSsoConfigGenerator.Util do
 
       error ->
         Logger.error("#{__MODULE__}.sso_oidc_register_client errored with #{inspect(error)}")
-        System.halt(-1)
+        System.halt(1)
     end
   end
 
@@ -235,7 +235,7 @@ defmodule AwsSsoConfigGenerator.Util do
 
       error ->
         Logger.error("#{__MODULE__}.start_device_authorization errored with #{inspect(error)}")
-        System.halt(-1)
+        System.halt(1)
     end
   end
 
@@ -291,14 +291,23 @@ defmodule AwsSsoConfigGenerator.Util do
            config.access_token,
            aws_request_options()
          ) do
-      {:ok, %{"accountList" => account_list, "nextToken" => next_token}, _} ->
+      {:ok, %{"accountList" => account_list} = response, _} ->
         updated_config = %{config | account_list: config.account_list ++ account_list}
 
-        if is_nil(next_token) do
-          updated_config
-        else
-          sso_list_accounts(updated_config, next_token)
+        case Map.get(response, "nextToken") do
+          nil -> updated_config
+          next_token -> sso_list_accounts(updated_config, next_token)
         end
+
+      {:error, {:unexpected_response, %{status_code: status_code, body: body}}} ->
+        Logger.error("sso_list_accounts failed: HTTP #{status_code} - #{body}")
+
+        System.halt(1)
+
+      error ->
+        Logger.error("sso_list_accounts failed: #{inspect(error)}")
+
+        System.halt(1)
     end
   end
 
@@ -311,18 +320,33 @@ defmodule AwsSsoConfigGenerator.Util do
     %{config | account_roles: account_roles}
   end
 
-  def sso_list_account_roles(config, account_id) do
-    {:ok, %{"roleList" => role_list}, _} =
-      AWS.SSO.list_account_roles(
-        config.client,
-        account_id,
-        nil,
-        nil,
-        config.access_token,
-        aws_request_options()
-      )
+  def sso_list_account_roles(config, account_id, current_token \\ nil) do
+    case AWS.SSO.list_account_roles(
+           config.client,
+           account_id,
+           nil,
+           current_token,
+           config.access_token,
+           aws_request_options()
+         ) do
+      {:ok, %{"roleList" => role_list} = response, _} ->
+        case Map.get(response, "nextToken") do
+          nil -> role_list
+          next_token -> role_list ++ sso_list_account_roles(config, account_id, next_token)
+        end
 
-    role_list
+      {:error, {:unexpected_response, %{status_code: status_code, body: body}}} ->
+        Logger.error(
+          "sso_list_account_roles failed for account #{account_id}: HTTP #{status_code} - #{body}"
+        )
+
+        System.halt(1)
+
+      error ->
+        Logger.error("sso_list_account_roles failed for account #{account_id}: #{inspect(error)}")
+
+        System.halt(1)
+    end
   end
 
   def maybe_save_debug_data(config) do
@@ -341,7 +365,7 @@ defmodule AwsSsoConfigGenerator.Util do
           :template_file
         ])
 
-      File.write!(debug_file, inspect(config), limit: :infinity, printable_limit: :infinity)
+      File.write!(debug_file, inspect(config, limit: :infinity, printable_limit: :infinity))
     end
 
     config
@@ -520,6 +544,10 @@ defmodule AwsSsoConfigGenerator.Util do
   end
 
   def aws_request_options() do
-    [sign_request?: false, enable_retries?: true]
+    [
+      sign_request?: false,
+      enable_retries?: true,
+      retry_opts: [max_retries: 20, base_sleep_time: 200, cap_sleep_time: 10_000]
+    ]
   end
 end

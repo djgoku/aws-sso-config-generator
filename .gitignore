@@ -28,4 +28,8 @@ aws_sso_config_generator-*.tar
 
 notes.org
 
-.devbox
+/.mise/
+/.mise-hex/
+/.mise-mix/
+/.nix-hex/
+mise.local.toml

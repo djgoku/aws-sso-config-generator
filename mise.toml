@@ -2,13 +2,17 @@
 experimental = true
 lockfile = true
 
+# Shared toolchain used by CI and local development. Local-only dev tools
+# (elixir-ls, expert, watchexec, pkl, python) live in mise.local.toml so CI
+# installs a minimal set and mise-action's --locked doesn't choke on the
+# URL-less elixir-ls (asdf backend).
 [tools]
-elixir = "1.18-otp-27"
-elixir-ls = "latest"
-erlang = "27.3.4"
+"aqua:ip7z/7zip" = "latest"
+elixir = "1.20.3"
+erlang = "29"
 gh = "latest"
-watchexec = "latest"
-zig = "0.14.0"
+zig = "0.16.0"
+"conda:xz-tools" = "latest"
 
 [env]
 LANG = "en_US.UTF-8"
@@ -26,7 +30,7 @@ _.path = [
 ]
 
 [hooks]
-postinstall = "mise run setup"
+postinstall = ["mise run setup"]
 
 [tasks.setup]
 run = """
@@ -39,16 +43,34 @@ run = """
 MIX_ENV=escript mix escript.build
 """
 
+[tasks.gen-workflows]
+description = 'Regenerates GitHub Actions YAML (SHA-pinned via DependabotManagedActions) from the Pkl sources'
+run = "pkl eval --project-dir .github/ -m .github/ .github/index.pkl"
+sources = ['.github/index.pkl', '.github/workflows/*.pkl', '.github/PklProject*']
+outputs = [
+  '.github/workflows/test.yml',
+  '.github/workflows/main.yml',
+  '.github/workflows/__lockfile__.yml',
+  '.github/dependabot.yml',
+]
+
+[tasks.deps-prod]
+run = "mix deps.get --only prod"
+
+[tasks.release]
+description = 'Builds the Burrito release; set BURRITO_TARGET to build a single target'
+run = "MIX_ENV=prod mix release --overwrite"
+
 [tasks.do-all]
 run = """
 mix deps.get --only prod
-mix test
-mix format --check-formatted
 elixir images/build-images-readme.exs
 MIX_ENV=prod mix release --overwrite
 """
 
 [tasks.test]
+# TODO: fail if release-notes/<version>.md is missing — version-info.exs
+# requires it to create a non -dev GitHub release.
 run = """
 mix deps.get
 mix test

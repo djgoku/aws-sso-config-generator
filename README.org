@@ -10,6 +10,47 @@ Tool to generate an AWS config file (~​~/.aws/config~) (our file is saved to ~
 
 Available downloads for macOS (x86 and m series), linux (x86 and arm64) and windows.
 
+*** Install with mise or aqua
+
+This repository ships an [[https://aquaproj.github.io/][aqua]] registry at its root
+(=registry.yaml=). Until the package is merged into the official
+[[https://github.com/aquaproj/aqua-registry][aqua-registry]], you can install
+directly from this repo's registry by pointing mise or aqua at it. Both tools
+download the release binary for your OS/arch and verify it against the
+release's =aws-sso-config-generator-checksums.txt=.
+
+With [[https://mise.jdx.dev/][mise]] (set the registry via the
+=MISE_AQUA_REGISTRIES= env var, or persist it under =[settings]= /
+=aqua.registries= in your config):
+
+#+begin_example
+MISE_AQUA_REGISTRIES=https://github.com/djgoku/aws-sso-config-generator \
+  mise use -g "aqua:djgoku/aws-sso-config-generator@latest"
+
+# or pin a specific version
+MISE_AQUA_REGISTRIES=https://github.com/djgoku/aws-sso-config-generator \
+  mise use -g "aqua:djgoku/aws-sso-config-generator@0.4.1"
+#+end_example
+
+With [[https://aquaproj.github.io/][aqua]] directly, add the registry and
+package to your =aqua.yaml=:
+
+#+begin_example
+registries:
+  - name: djgoku
+    type: github_content
+    repo_owner: djgoku
+    repo_name: aws-sso-config-generator
+    ref: main            # a tag/commit is safer than a branch
+    path: registry.yaml
+packages:
+  - name: djgoku/aws-sso-config-generator@0.4.1
+    registry: djgoku
+#+end_example
+
+Then run =aqua install=. (Both remote forms resolve the file from the default
+branch, so they work once =registry.yaml= is present there.)
+
 *** macOS
 
 On macOS you will get a popup if you run without doing the below.
@@ -148,7 +189,21 @@ In the =template.json= structure, the values under the =accounts= and =roles= ke
 ** Development
 
 1. Clone repository
-2. ~devbox run do-all~
+2. ~mise install~ (installs the toolchain, hex/rebar, and node deps via hooks)
+3. ~mise run test~ - fetch deps, run tests, check formatting
+
+Other tasks:
+
+- ~mise run do-all~ - full local release build (all Burrito targets)
+
+*Note (testing Burrito builds):* the wrapper extracts its payload to
+~~/Library/Application Support/.burrito/<app>_erts-<erts>_<version>~ and reuses
+it on every launch. A rebuilt binary at the same version will keep running the
+*old* extracted payload - run ~./burrito_out/<binary> maintenance uninstall~
+before re-testing a rebuild.
+- ~mise run escript~ - build the escript variant
+- ~mise run gen-workflows~ - regenerate GitHub Actions YAML from the Pkl sources
+- ~mise run version-info-only~ - print the current mix.exs version
 
 
 ** PKCE and Device Code Process diagrams for AWS CLI and ~aws-sso-config-generator~
