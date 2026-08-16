@@ -25,6 +25,20 @@ jobs {
       new {
         uses = "actions/checkout@v7"
       }
+      // Guard: main must hold a live (non -dev) version. Merging to main cuts a
+      // release, so fail the check when mix.exs still has a -dev version — that
+      // blocks the merge until it's bumped. Make this a required status check
+      // in branch protection.
+      new {
+        name = "Reject -dev version"
+        run = """
+          v=$(grep -oE 'version: "[^"]+"' mix.exs | head -1 | cut -d'"' -f2)
+          echo "mix.exs version: $v"
+          case "$v" in
+            *-dev) echo "::error::mix.exs version is $v — bump to the live (non -dev) version before merging"; exit 1 ;;
+          esac
+          """
+      }
       // install: false — mise-action auto-adds --locked when mise.lock exists,
       // and the lock lacks linux-x64 (glibc) URLs for erlang and conda:xz-tools,
       // so a strict install aborts. cache: false because mise-action saves no
