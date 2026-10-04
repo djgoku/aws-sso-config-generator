@@ -67,12 +67,13 @@ mise use -g packslip:github.com/djgoku/aws-sso-config-generator
 
 To verify a manual download with the [[https://packslip.dev/][packslip]] CLI,
 download the binary and =packslip.sigstore.json= from the same release, then
-run:
+run the command below. =ps1_iiyjlwltyd4utkfftgvbpsxwvq= is this repository's
+signer fingerprint. With it, verify fails for a bundle signed by any other
+repository, including one that later takes this repository's name.
 
 #+begin_example
 packslip verify packslip.sigstore.json \
-  --identity-prefix https://github.com/djgoku/aws-sso-config-generator/ \
-  --issuer https://token.actions.githubusercontent.com \
+  --pin ps1_iiyjlwltyd4utkfftgvbpsxwvq \
   --artifact aws-sso-config-generator-macos-m1
 #+end_example
 
