@@ -51,6 +51,31 @@ packages:
 Then run =aqua install=. (Both remote forms resolve the file from the default
 branch, so they work once =registry.yaml= is present there.)
 
+*** Verify with packslip
+
+Releases after 0.4.2 ship =packslip.sigstore.json=, a signed list of every
+binary's digest, platform, and command name. This repo's release workflow
+signs it.
+
+With mise 2026.9.2 or later, this installs the binary for your platform. mise
+first verifies the signature, project, version, and digest. (mise holds new
+releases back 24 hours by default via =minimum_release_age=.)
+
+#+begin_example
+mise use -g packslip:github.com/djgoku/aws-sso-config-generator
+#+end_example
+
+To verify a manual download with the [[https://packslip.dev/][packslip]] CLI,
+download the binary and =packslip.sigstore.json= from the same release, then
+run:
+
+#+begin_example
+packslip verify packslip.sigstore.json \
+  --identity-prefix https://github.com/djgoku/aws-sso-config-generator/ \
+  --issuer https://token.actions.githubusercontent.com \
+  --artifact aws-sso-config-generator-macos-m1
+#+end_example
+
 *** macOS
 
 On macOS you will get a popup if you run without doing the below.
