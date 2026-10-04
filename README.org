@@ -79,7 +79,8 @@ packslip verify packslip.sigstore.json \
 
 *** macOS
 
-On macOS you will get a popup if you run without doing the below.
+A mise install needs no extra steps. If you download the macOS binary with a
+browser, macOS quarantines it, and running it shows this popup:
 
 ~Apple could not verify “aws-sso-config-generator” is free of malware that may harm your Mac or compromise your privacy.~
 
@@ -88,7 +89,8 @@ On macOS you will get a popup if you run without doing the below.
 
 **** Allow executable to not be quarantined
 
-Make sure to only do this for verified executable downloaded from https://github.com/djgoku/aws-sso-config-generator or built locally.
+Verify the binary with packslip first, as in /Verify with packslip/ above. Then
+clear the quarantine flag and make the binary executable:
 
 #+begin_example
 xattr -dr com.apple.quarantine ~/aws-sso-config-generator
