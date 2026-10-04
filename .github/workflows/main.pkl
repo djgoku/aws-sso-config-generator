@@ -165,9 +165,13 @@ jobs {
     `runs-on` = "ubuntu-24.04-arm"
     `timeout-minutes` = 15
     // contents: write lets the built-in GITHUB_TOKEN create the release and
-    // upload assets.
+    // upload assets. id-token: write lets packslip sign keylessly with this
+    // job's OIDC identity. attestations: write lets it attest the binaries'
+    // build provenance.
     permissions {
       contents = "write"
+      `id-token` = "write"
+      attestations = "write"
     }
     needs {
       "build-linux"
@@ -187,7 +191,18 @@ jobs {
         }
       }
       new {
+        id = "release"
         run = "mise exec -- elixir version-info.exs"
+      }
+      // The globs skip the checksums file, which packslip would reject as an
+      // artifact.
+      new {
+        uses = "jdx/packslip@v1"
+        with {
+          ["tag"] = "${{ steps.release.outputs.version }}"
+          ["artifacts"] = "burrito_out/*-linux* burrito_out/*-macos* burrito_out/*.exe"
+          ["manifest"] = "packslip.toml"
+        }
       }
     }
   }

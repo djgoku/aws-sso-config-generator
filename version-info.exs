@@ -3,6 +3,10 @@ require Logger
 version = Regex.run(~r/version: "(.*)"/, File.read!("mix.exs"), capture: :all_but_first) |> List.first()
 Logger.info("version #{version}")
 
+if github_output = System.get_env("GITHUB_OUTPUT") do
+  File.write!(github_output, "version=#{version}\n", [:append])
+end
+
 File.cd!("burrito_out")
 
 for file <- File.ls!() do

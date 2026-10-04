@@ -1,0 +1,26 @@
+bin = ["aws-sso-config-generator"]
+
+[[artifact]]
+path = "burrito_out/aws-sso-config-generator-linux"
+os = "linux"
+arch = "x86_64"
+
+[[artifact]]
+path = "burrito_out/aws-sso-config-generator-linux-aarch64"
+os = "linux"
+arch = "aarch64"
+
+[[artifact]]
+path = "burrito_out/aws-sso-config-generator-macos"
+os = "darwin"
+arch = "x86_64"
+
+[[artifact]]
+path = "burrito_out/aws-sso-config-generator-macos-m1"
+os = "darwin"
+arch = "aarch64"
+
+[[artifact]]
+path = "burrito_out/aws-sso-config-generator-windows.exe"
+os = "windows"
+arch = "x86_64"
