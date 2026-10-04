@@ -116,7 +116,9 @@ jobs:
     - build-windows
     - build-macos
     permissions:
+      attestations: write
       contents: write
+      id-token: write
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 15
     steps:
@@ -137,4 +139,10 @@ jobs:
         path: burrito_out
         pattern: burrito-*
         merge-multiple: true
-    - run: mise exec -- elixir version-info.exs
+    - id: release
+      run: mise exec -- elixir version-info.exs
+    - uses: jdx/packslip@22be7aeb840156291e1ae795ca37b36a2dc1969c # v1
+      with:
+        tag: ${{ steps.release.outputs.version }}
+        artifacts: burrito_out/*-linux* burrito_out/*-macos* burrito_out/*.exe
+        manifest: packslip.toml
