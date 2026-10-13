@@ -141,7 +141,7 @@ jobs:
         merge-multiple: true
     - id: release
       run: mise exec -- elixir version-info.exs
-    - uses: jdx/packslip@22be7aeb840156291e1ae795ca37b36a2dc1969c # v1
+    - uses: jdx/packslip@2af36e792faa28130987c8af509e475c7458405d # v1
       with:
         tag: ${{ steps.release.outputs.version }}
         artifacts: burrito_out/*-linux* burrito_out/*-macos* burrito_out/*.exe
