@@ -42,7 +42,7 @@ jobs:
         mise exec -- elixir images/build-images-readme.exs
         BURRITO_TARGET=linux mise run release
         BURRITO_TARGET=linux_aarch64 mise run release
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
       with:
         name: burrito-linux
         path: burrito_out/
@@ -73,7 +73,7 @@ jobs:
     - run: |-
         mise run deps-prod
         BURRITO_TARGET=windows mise run release
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
       with:
         name: burrito-windows
         path: burrito_out/
@@ -105,7 +105,7 @@ jobs:
         mise run deps-prod
         BURRITO_TARGET=macos_m1 mise run release
         BURRITO_TARGET=macos mise run release
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
       with:
         name: burrito-macos
         path: burrito_out/
