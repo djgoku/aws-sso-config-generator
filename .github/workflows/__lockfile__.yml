@@ -26,4 +26,4 @@ jobs:
     - name: jdx/mise-action@v4
       uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4
     - name: jdx/packslip@v1
-      uses: jdx/packslip@22be7aeb840156291e1ae795ca37b36a2dc1969c # v1
+      uses: jdx/packslip@2187c31f8317b8548833baf60cfe93db1f42431d # v1
